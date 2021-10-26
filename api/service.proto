@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package virtm;
+
+option go_package = "github.com/valar/virtm/api;api";
+
+import "data.proto";
+
+service VirtM {
+    rpc CreateMachine(CreateMachineRequest) returns (CreateMachineResponse);
+    rpc GetMachineDetails(GetMachineDetailsRequest) returns (GetMachineDetailsResponse);
+    rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse);
+}
+
+message CreateMachineRequest {
+    string name = 1;
+    Machine.Specs specs = 2;
+}
+
+
+message CreateMachineResponse {
+
+}
+
+message GetMachineDetailsRequest {}
+
+message GetMachineDetailsResponse {}
+
+message DeleteMachineRequest {}
+
+message DeleteMachineResponse {}

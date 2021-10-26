@@ -1,0 +1,48 @@
+syntax = "proto3";
+
+package virtm;
+
+option go_package = "github.com/valar/virtm/api;api";
+
+
+message SSHKey {
+    string id = 1;
+    string name = 2;
+    string pubkey = 3;
+}
+
+message Image {
+    string id = 1;
+    string name = 2;
+    OS system = 3;
+
+    enum OS {
+        OS_UNSPECIFIEED = 0;
+        DEBIAN_BUSTER = 1;
+        DEBIAN_BULLSEYE = 2;
+        DEBIAN_BOOKWORM = 3;
+    }
+}
+
+message Machine {
+    string id = 1;
+    string name = 2;
+    Specs specs = 3;
+    Network network = 4;
+
+    string imageId = 5;
+    string sshKeyId = 6;
+
+    message Specs {
+        int64 cpus = 1;
+        int64 memory = 2;
+        int64 disk = 3;
+    }
+
+    message Network {
+        string ipV4 = 1;
+        string ipV6 = 2;
+        string privateDns = 3;
+        string publicDns = 4;
+    }
+}

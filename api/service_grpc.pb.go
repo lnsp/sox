@@ -21,6 +21,10 @@ type VirtMClient interface {
 	CreateMachine(ctx context.Context, in *CreateMachineRequest, opts ...grpc.CallOption) (*CreateMachineResponse, error)
 	GetMachineDetails(ctx context.Context, in *GetMachineDetailsRequest, opts ...grpc.CallOption) (*GetMachineDetailsResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
+	CreateSSHKey(ctx context.Context, in *CreateSSHKeyRequest, opts ...grpc.CallOption) (*CreateSSHKeyResponse, error)
+	ListSSHKeys(ctx context.Context, in *ListSSHKeysRequest, opts ...grpc.CallOption) (*ListSSHKeysResponse, error)
+	DeleteSSHKey(ctx context.Context, in *DeleteSSHKeyRequest, opts ...grpc.CallOption) (*DeleteSSHKeyResponse, error)
+	ListImages(ctx context.Context, in *ListImagesRequest, opts ...grpc.CallOption) (*ListImagesResponse, error)
 }
 
 type virtMClient struct {
@@ -58,6 +62,42 @@ func (c *virtMClient) DeleteMachine(ctx context.Context, in *DeleteMachineReques
 	return out, nil
 }
 
+func (c *virtMClient) CreateSSHKey(ctx context.Context, in *CreateSSHKeyRequest, opts ...grpc.CallOption) (*CreateSSHKeyResponse, error) {
+	out := new(CreateSSHKeyResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/CreateSSHKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *virtMClient) ListSSHKeys(ctx context.Context, in *ListSSHKeysRequest, opts ...grpc.CallOption) (*ListSSHKeysResponse, error) {
+	out := new(ListSSHKeysResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/ListSSHKeys", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *virtMClient) DeleteSSHKey(ctx context.Context, in *DeleteSSHKeyRequest, opts ...grpc.CallOption) (*DeleteSSHKeyResponse, error) {
+	out := new(DeleteSSHKeyResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/DeleteSSHKey", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *virtMClient) ListImages(ctx context.Context, in *ListImagesRequest, opts ...grpc.CallOption) (*ListImagesResponse, error) {
+	out := new(ListImagesResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/ListImages", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VirtMServer is the server API for VirtM service.
 // All implementations must embed UnimplementedVirtMServer
 // for forward compatibility
@@ -65,6 +105,10 @@ type VirtMServer interface {
 	CreateMachine(context.Context, *CreateMachineRequest) (*CreateMachineResponse, error)
 	GetMachineDetails(context.Context, *GetMachineDetailsRequest) (*GetMachineDetailsResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
+	CreateSSHKey(context.Context, *CreateSSHKeyRequest) (*CreateSSHKeyResponse, error)
+	ListSSHKeys(context.Context, *ListSSHKeysRequest) (*ListSSHKeysResponse, error)
+	DeleteSSHKey(context.Context, *DeleteSSHKeyRequest) (*DeleteSSHKeyResponse, error)
+	ListImages(context.Context, *ListImagesRequest) (*ListImagesResponse, error)
 	mustEmbedUnimplementedVirtMServer()
 }
 
@@ -80,6 +124,18 @@ func (UnimplementedVirtMServer) GetMachineDetails(context.Context, *GetMachineDe
 }
 func (UnimplementedVirtMServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
+}
+func (UnimplementedVirtMServer) CreateSSHKey(context.Context, *CreateSSHKeyRequest) (*CreateSSHKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method CreateSSHKey not implemented")
+}
+func (UnimplementedVirtMServer) ListSSHKeys(context.Context, *ListSSHKeysRequest) (*ListSSHKeysResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListSSHKeys not implemented")
+}
+func (UnimplementedVirtMServer) DeleteSSHKey(context.Context, *DeleteSSHKeyRequest) (*DeleteSSHKeyResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSSHKey not implemented")
+}
+func (UnimplementedVirtMServer) ListImages(context.Context, *ListImagesRequest) (*ListImagesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListImages not implemented")
 }
 func (UnimplementedVirtMServer) mustEmbedUnimplementedVirtMServer() {}
 
@@ -148,6 +204,78 @@ func _VirtM_DeleteMachine_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VirtM_CreateSSHKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSSHKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).CreateSSHKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/CreateSSHKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).CreateSSHKey(ctx, req.(*CreateSSHKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VirtM_ListSSHKeys_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSSHKeysRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).ListSSHKeys(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/ListSSHKeys",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).ListSSHKeys(ctx, req.(*ListSSHKeysRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VirtM_DeleteSSHKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteSSHKeyRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).DeleteSSHKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/DeleteSSHKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).DeleteSSHKey(ctx, req.(*DeleteSSHKeyRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VirtM_ListImages_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListImagesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).ListImages(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/ListImages",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).ListImages(ctx, req.(*ListImagesRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VirtM_ServiceDesc is the grpc.ServiceDesc for VirtM service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -166,6 +294,22 @@ var VirtM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteMachine",
 			Handler:    _VirtM_DeleteMachine_Handler,
+		},
+		{
+			MethodName: "CreateSSHKey",
+			Handler:    _VirtM_CreateSSHKey_Handler,
+		},
+		{
+			MethodName: "ListSSHKeys",
+			Handler:    _VirtM_ListSSHKeys_Handler,
+		},
+		{
+			MethodName: "DeleteSSHKey",
+			Handler:    _VirtM_DeleteSSHKey_Handler,
+		},
+		{
+			MethodName: "ListImages",
+			Handler:    _VirtM_ListImages_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

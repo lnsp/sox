@@ -10,6 +10,7 @@ import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 	reflect "reflect"
+	sync "sync"
 )
 
 const (
@@ -19,21 +20,558 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type Image_OS int32
+
+const (
+	Image_OS_UNSPECIFIEED Image_OS = 0
+	Image_DEBIAN_BUSTER   Image_OS = 1
+	Image_DEBIAN_BULLSEYE Image_OS = 2
+	Image_DEBIAN_BOOKWORM Image_OS = 3
+)
+
+// Enum value maps for Image_OS.
+var (
+	Image_OS_name = map[int32]string{
+		0: "OS_UNSPECIFIEED",
+		1: "DEBIAN_BUSTER",
+		2: "DEBIAN_BULLSEYE",
+		3: "DEBIAN_BOOKWORM",
+	}
+	Image_OS_value = map[string]int32{
+		"OS_UNSPECIFIEED": 0,
+		"DEBIAN_BUSTER":   1,
+		"DEBIAN_BULLSEYE": 2,
+		"DEBIAN_BOOKWORM": 3,
+	}
+)
+
+func (x Image_OS) Enum() *Image_OS {
+	p := new(Image_OS)
+	*p = x
+	return p
+}
+
+func (x Image_OS) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Image_OS) Descriptor() protoreflect.EnumDescriptor {
+	return file_data_proto_enumTypes[0].Descriptor()
+}
+
+func (Image_OS) Type() protoreflect.EnumType {
+	return &file_data_proto_enumTypes[0]
+}
+
+func (x Image_OS) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Image_OS.Descriptor instead.
+func (Image_OS) EnumDescriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{1, 0}
+}
+
+type Machine_Status int32
+
+const (
+	Machine_STATUS_UNSPECIFIED Machine_Status = 0
+	Machine_CREATING           Machine_Status = 1
+	Machine_STOPPED            Machine_Status = 2
+	Machine_RUNNING            Machine_Status = 3
+	Machine_DESTROYED          Machine_Status = 4
+)
+
+// Enum value maps for Machine_Status.
+var (
+	Machine_Status_name = map[int32]string{
+		0: "STATUS_UNSPECIFIED",
+		1: "CREATING",
+		2: "STOPPED",
+		3: "RUNNING",
+		4: "DESTROYED",
+	}
+	Machine_Status_value = map[string]int32{
+		"STATUS_UNSPECIFIED": 0,
+		"CREATING":           1,
+		"STOPPED":            2,
+		"RUNNING":            3,
+		"DESTROYED":          4,
+	}
+)
+
+func (x Machine_Status) Enum() *Machine_Status {
+	p := new(Machine_Status)
+	*p = x
+	return p
+}
+
+func (x Machine_Status) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (Machine_Status) Descriptor() protoreflect.EnumDescriptor {
+	return file_data_proto_enumTypes[1].Descriptor()
+}
+
+func (Machine_Status) Type() protoreflect.EnumType {
+	return &file_data_proto_enumTypes[1]
+}
+
+func (x Machine_Status) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use Machine_Status.Descriptor instead.
+func (Machine_Status) EnumDescriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{2, 0}
+}
+
+type SSHKey struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id     string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name   string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Pubkey string `protobuf:"bytes,3,opt,name=pubkey,proto3" json:"pubkey,omitempty"`
+}
+
+func (x *SSHKey) Reset() {
+	*x = SSHKey{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_data_proto_msgTypes[0]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SSHKey) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SSHKey) ProtoMessage() {}
+
+func (x *SSHKey) ProtoReflect() protoreflect.Message {
+	mi := &file_data_proto_msgTypes[0]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SSHKey.ProtoReflect.Descriptor instead.
+func (*SSHKey) Descriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{0}
+}
+
+func (x *SSHKey) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SSHKey) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *SSHKey) GetPubkey() string {
+	if x != nil {
+		return x.Pubkey
+	}
+	return ""
+}
+
+type Image struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id     string   `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name   string   `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	System Image_OS `protobuf:"varint,3,opt,name=system,proto3,enum=virtm.Image_OS" json:"system,omitempty"`
+}
+
+func (x *Image) Reset() {
+	*x = Image{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_data_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Image) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Image) ProtoMessage() {}
+
+func (x *Image) ProtoReflect() protoreflect.Message {
+	mi := &file_data_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Image.ProtoReflect.Descriptor instead.
+func (*Image) Descriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{1}
+}
+
+func (x *Image) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Image) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Image) GetSystem() Image_OS {
+	if x != nil {
+		return x.System
+	}
+	return Image_OS_UNSPECIFIEED
+}
+
+type Machine struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Id       string           `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name     string           `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Status   Machine_Status   `protobuf:"varint,3,opt,name=status,proto3,enum=virtm.Machine_Status" json:"status,omitempty"`
+	Specs    *Machine_Specs   `protobuf:"bytes,4,opt,name=specs,proto3" json:"specs,omitempty"`
+	Network  *Machine_Network `protobuf:"bytes,5,opt,name=network,proto3" json:"network,omitempty"`
+	ImageId  string           `protobuf:"bytes,6,opt,name=imageId,proto3" json:"imageId,omitempty"`
+	SshKeyId string           `protobuf:"bytes,7,opt,name=sshKeyId,proto3" json:"sshKeyId,omitempty"`
+}
+
+func (x *Machine) Reset() {
+	*x = Machine{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_data_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Machine) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Machine) ProtoMessage() {}
+
+func (x *Machine) ProtoReflect() protoreflect.Message {
+	mi := &file_data_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Machine.ProtoReflect.Descriptor instead.
+func (*Machine) Descriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Machine) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Machine) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Machine) GetStatus() Machine_Status {
+	if x != nil {
+		return x.Status
+	}
+	return Machine_STATUS_UNSPECIFIED
+}
+
+func (x *Machine) GetSpecs() *Machine_Specs {
+	if x != nil {
+		return x.Specs
+	}
+	return nil
+}
+
+func (x *Machine) GetNetwork() *Machine_Network {
+	if x != nil {
+		return x.Network
+	}
+	return nil
+}
+
+func (x *Machine) GetImageId() string {
+	if x != nil {
+		return x.ImageId
+	}
+	return ""
+}
+
+func (x *Machine) GetSshKeyId() string {
+	if x != nil {
+		return x.SshKeyId
+	}
+	return ""
+}
+
+type Machine_Specs struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Cpus   int64 `protobuf:"varint,1,opt,name=cpus,proto3" json:"cpus,omitempty"`
+	Memory int64 `protobuf:"varint,2,opt,name=memory,proto3" json:"memory,omitempty"`
+	Disk   int64 `protobuf:"varint,3,opt,name=disk,proto3" json:"disk,omitempty"`
+}
+
+func (x *Machine_Specs) Reset() {
+	*x = Machine_Specs{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_data_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Machine_Specs) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Machine_Specs) ProtoMessage() {}
+
+func (x *Machine_Specs) ProtoReflect() protoreflect.Message {
+	mi := &file_data_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Machine_Specs.ProtoReflect.Descriptor instead.
+func (*Machine_Specs) Descriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{2, 0}
+}
+
+func (x *Machine_Specs) GetCpus() int64 {
+	if x != nil {
+		return x.Cpus
+	}
+	return 0
+}
+
+func (x *Machine_Specs) GetMemory() int64 {
+	if x != nil {
+		return x.Memory
+	}
+	return 0
+}
+
+func (x *Machine_Specs) GetDisk() int64 {
+	if x != nil {
+		return x.Disk
+	}
+	return 0
+}
+
+type Machine_Network struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	IpV4       string `protobuf:"bytes,1,opt,name=ipV4,proto3" json:"ipV4,omitempty"`
+	IpV6       string `protobuf:"bytes,2,opt,name=ipV6,proto3" json:"ipV6,omitempty"`
+	PrivateDns string `protobuf:"bytes,3,opt,name=privateDns,proto3" json:"privateDns,omitempty"`
+	PublicDns  string `protobuf:"bytes,4,opt,name=publicDns,proto3" json:"publicDns,omitempty"`
+}
+
+func (x *Machine_Network) Reset() {
+	*x = Machine_Network{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_data_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *Machine_Network) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Machine_Network) ProtoMessage() {}
+
+func (x *Machine_Network) ProtoReflect() protoreflect.Message {
+	mi := &file_data_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Machine_Network.ProtoReflect.Descriptor instead.
+func (*Machine_Network) Descriptor() ([]byte, []int) {
+	return file_data_proto_rawDescGZIP(), []int{2, 1}
+}
+
+func (x *Machine_Network) GetIpV4() string {
+	if x != nil {
+		return x.IpV4
+	}
+	return ""
+}
+
+func (x *Machine_Network) GetIpV6() string {
+	if x != nil {
+		return x.IpV6
+	}
+	return ""
+}
+
+func (x *Machine_Network) GetPrivateDns() string {
+	if x != nil {
+		return x.PrivateDns
+	}
+	return ""
+}
+
+func (x *Machine_Network) GetPublicDns() string {
+	if x != nil {
+		return x.PublicDns
+	}
+	return ""
+}
+
 var File_data_proto protoreflect.FileDescriptor
 
 var file_data_proto_rawDesc = []byte{
 	0x0a, 0x0a, 0x64, 0x61, 0x74, 0x61, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x76, 0x69,
-	0x72, 0x74, 0x6d, 0x42, 0x07, 0x5a, 0x05, 0x2e, 0x3b, 0x61, 0x70, 0x69, 0x62, 0x06, 0x70, 0x72,
-	0x6f, 0x74, 0x6f, 0x33,
+	0x72, 0x74, 0x6d, 0x22, 0x44, 0x0a, 0x06, 0x53, 0x53, 0x48, 0x4b, 0x65, 0x79, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a,
+	0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d,
+	0x65, 0x12, 0x16, 0x0a, 0x06, 0x70, 0x75, 0x62, 0x6b, 0x65, 0x79, 0x18, 0x03, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x06, 0x70, 0x75, 0x62, 0x6b, 0x65, 0x79, 0x22, 0xac, 0x01, 0x0a, 0x05, 0x49, 0x6d,
+	0x61, 0x67, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
+	0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x27, 0x0a, 0x06, 0x73, 0x79, 0x73, 0x74, 0x65,
+	0x6d, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x0f, 0x2e, 0x76, 0x69, 0x72, 0x74, 0x6d, 0x2e,
+	0x49, 0x6d, 0x61, 0x67, 0x65, 0x2e, 0x4f, 0x53, 0x52, 0x06, 0x73, 0x79, 0x73, 0x74, 0x65, 0x6d,
+	0x22, 0x56, 0x0a, 0x02, 0x4f, 0x53, 0x12, 0x13, 0x0a, 0x0f, 0x4f, 0x53, 0x5f, 0x55, 0x4e, 0x53,
+	0x50, 0x45, 0x43, 0x49, 0x46, 0x49, 0x45, 0x45, 0x44, 0x10, 0x00, 0x12, 0x11, 0x0a, 0x0d, 0x44,
+	0x45, 0x42, 0x49, 0x41, 0x4e, 0x5f, 0x42, 0x55, 0x53, 0x54, 0x45, 0x52, 0x10, 0x01, 0x12, 0x13,
+	0x0a, 0x0f, 0x44, 0x45, 0x42, 0x49, 0x41, 0x4e, 0x5f, 0x42, 0x55, 0x4c, 0x4c, 0x53, 0x45, 0x59,
+	0x45, 0x10, 0x02, 0x12, 0x13, 0x0a, 0x0f, 0x44, 0x45, 0x42, 0x49, 0x41, 0x4e, 0x5f, 0x42, 0x4f,
+	0x4f, 0x4b, 0x57, 0x4f, 0x52, 0x4d, 0x10, 0x03, 0x22, 0x83, 0x04, 0x0a, 0x07, 0x4d, 0x61, 0x63,
+	0x68, 0x69, 0x6e, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x69, 0x64, 0x12, 0x12, 0x0a, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x18, 0x02, 0x20, 0x01,
+	0x28, 0x09, 0x52, 0x04, 0x6e, 0x61, 0x6d, 0x65, 0x12, 0x2d, 0x0a, 0x06, 0x73, 0x74, 0x61, 0x74,
+	0x75, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x0e, 0x32, 0x15, 0x2e, 0x76, 0x69, 0x72, 0x74, 0x6d,
+	0x2e, 0x4d, 0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x2e, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x52,
+	0x06, 0x73, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12, 0x2a, 0x0a, 0x05, 0x73, 0x70, 0x65, 0x63, 0x73,
+	0x18, 0x04, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x14, 0x2e, 0x76, 0x69, 0x72, 0x74, 0x6d, 0x2e, 0x4d,
+	0x61, 0x63, 0x68, 0x69, 0x6e, 0x65, 0x2e, 0x53, 0x70, 0x65, 0x63, 0x73, 0x52, 0x05, 0x73, 0x70,
+	0x65, 0x63, 0x73, 0x12, 0x30, 0x0a, 0x07, 0x6e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x16, 0x2e, 0x76, 0x69, 0x72, 0x74, 0x6d, 0x2e, 0x4d, 0x61, 0x63,
+	0x68, 0x69, 0x6e, 0x65, 0x2e, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x52, 0x07, 0x6e, 0x65,
+	0x74, 0x77, 0x6f, 0x72, 0x6b, 0x12, 0x18, 0x0a, 0x07, 0x69, 0x6d, 0x61, 0x67, 0x65, 0x49, 0x64,
+	0x18, 0x06, 0x20, 0x01, 0x28, 0x09, 0x52, 0x07, 0x69, 0x6d, 0x61, 0x67, 0x65, 0x49, 0x64, 0x12,
+	0x1a, 0x0a, 0x08, 0x73, 0x73, 0x68, 0x4b, 0x65, 0x79, 0x49, 0x64, 0x18, 0x07, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x08, 0x73, 0x73, 0x68, 0x4b, 0x65, 0x79, 0x49, 0x64, 0x1a, 0x47, 0x0a, 0x05, 0x53,
+	0x70, 0x65, 0x63, 0x73, 0x12, 0x12, 0x0a, 0x04, 0x63, 0x70, 0x75, 0x73, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x03, 0x52, 0x04, 0x63, 0x70, 0x75, 0x73, 0x12, 0x16, 0x0a, 0x06, 0x6d, 0x65, 0x6d, 0x6f,
+	0x72, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x03, 0x52, 0x06, 0x6d, 0x65, 0x6d, 0x6f, 0x72, 0x79,
+	0x12, 0x12, 0x0a, 0x04, 0x64, 0x69, 0x73, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x03, 0x52, 0x04,
+	0x64, 0x69, 0x73, 0x6b, 0x1a, 0x6f, 0x0a, 0x07, 0x4e, 0x65, 0x74, 0x77, 0x6f, 0x72, 0x6b, 0x12,
+	0x12, 0x0a, 0x04, 0x69, 0x70, 0x56, 0x34, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x69,
+	0x70, 0x56, 0x34, 0x12, 0x12, 0x0a, 0x04, 0x69, 0x70, 0x56, 0x36, 0x18, 0x02, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x04, 0x69, 0x70, 0x56, 0x36, 0x12, 0x1e, 0x0a, 0x0a, 0x70, 0x72, 0x69, 0x76, 0x61,
+	0x74, 0x65, 0x44, 0x6e, 0x73, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x0a, 0x70, 0x72, 0x69,
+	0x76, 0x61, 0x74, 0x65, 0x44, 0x6e, 0x73, 0x12, 0x1c, 0x0a, 0x09, 0x70, 0x75, 0x62, 0x6c, 0x69,
+	0x63, 0x44, 0x6e, 0x73, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x70, 0x75, 0x62, 0x6c,
+	0x69, 0x63, 0x44, 0x6e, 0x73, 0x22, 0x57, 0x0a, 0x06, 0x53, 0x74, 0x61, 0x74, 0x75, 0x73, 0x12,
+	0x16, 0x0a, 0x12, 0x53, 0x54, 0x41, 0x54, 0x55, 0x53, 0x5f, 0x55, 0x4e, 0x53, 0x50, 0x45, 0x43,
+	0x49, 0x46, 0x49, 0x45, 0x44, 0x10, 0x00, 0x12, 0x0c, 0x0a, 0x08, 0x43, 0x52, 0x45, 0x41, 0x54,
+	0x49, 0x4e, 0x47, 0x10, 0x01, 0x12, 0x0b, 0x0a, 0x07, 0x53, 0x54, 0x4f, 0x50, 0x50, 0x45, 0x44,
+	0x10, 0x02, 0x12, 0x0b, 0x0a, 0x07, 0x52, 0x55, 0x4e, 0x4e, 0x49, 0x4e, 0x47, 0x10, 0x03, 0x12,
+	0x0d, 0x0a, 0x09, 0x44, 0x45, 0x53, 0x54, 0x52, 0x4f, 0x59, 0x45, 0x44, 0x10, 0x04, 0x42, 0x20,
+	0x5a, 0x1e, 0x67, 0x69, 0x74, 0x68, 0x75, 0x62, 0x2e, 0x63, 0x6f, 0x6d, 0x2f, 0x76, 0x61, 0x6c,
+	0x61, 0x72, 0x2f, 0x76, 0x69, 0x72, 0x74, 0x6d, 0x2f, 0x61, 0x70, 0x69, 0x3b, 0x61, 0x70, 0x69,
+	0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
-var file_data_proto_goTypes = []interface{}{}
+var (
+	file_data_proto_rawDescOnce sync.Once
+	file_data_proto_rawDescData = file_data_proto_rawDesc
+)
+
+func file_data_proto_rawDescGZIP() []byte {
+	file_data_proto_rawDescOnce.Do(func() {
+		file_data_proto_rawDescData = protoimpl.X.CompressGZIP(file_data_proto_rawDescData)
+	})
+	return file_data_proto_rawDescData
+}
+
+var file_data_proto_enumTypes = make([]protoimpl.EnumInfo, 2)
+var file_data_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_data_proto_goTypes = []interface{}{
+	(Image_OS)(0),           // 0: virtm.Image.OS
+	(Machine_Status)(0),     // 1: virtm.Machine.Status
+	(*SSHKey)(nil),          // 2: virtm.SSHKey
+	(*Image)(nil),           // 3: virtm.Image
+	(*Machine)(nil),         // 4: virtm.Machine
+	(*Machine_Specs)(nil),   // 5: virtm.Machine.Specs
+	(*Machine_Network)(nil), // 6: virtm.Machine.Network
+}
 var file_data_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	0, // 0: virtm.Image.system:type_name -> virtm.Image.OS
+	1, // 1: virtm.Machine.status:type_name -> virtm.Machine.Status
+	5, // 2: virtm.Machine.specs:type_name -> virtm.Machine.Specs
+	6, // 3: virtm.Machine.network:type_name -> virtm.Machine.Network
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_data_proto_init() }
@@ -41,18 +579,82 @@ func file_data_proto_init() {
 	if File_data_proto != nil {
 		return
 	}
+	if !protoimpl.UnsafeEnabled {
+		file_data_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SSHKey); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_data_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Image); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_data_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Machine); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_data_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Machine_Specs); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_data_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*Machine_Network); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_data_proto_rawDesc,
-			NumEnums:      0,
-			NumMessages:   0,
+			NumEnums:      2,
+			NumMessages:   5,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_data_proto_goTypes,
 		DependencyIndexes: file_data_proto_depIdxs,
+		EnumInfos:         file_data_proto_enumTypes,
+		MessageInfos:      file_data_proto_msgTypes,
 	}.Build()
 	File_data_proto = out.File
 	file_data_proto_rawDesc = nil

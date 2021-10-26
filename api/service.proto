@@ -10,23 +10,63 @@ service VirtM {
     rpc CreateMachine(CreateMachineRequest) returns (CreateMachineResponse);
     rpc GetMachineDetails(GetMachineDetailsRequest) returns (GetMachineDetailsResponse);
     rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse);
+
+    rpc CreateSSHKey(CreateSSHKeyRequest) returns (CreateSSHKeyResponse);
+    rpc ListSSHKeys(ListSSHKeysRequest) returns (ListSSHKeysResponse);
+    rpc DeleteSSHKey(DeleteSSHKeyRequest) returns (DeleteSSHKeyResponse);
+
+    rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
 }
 
 message CreateMachineRequest {
     string name = 1;
     Machine.Specs specs = 2;
     string imageId = 3;
+    string sshKeyId = 4;
 }
-
 
 message CreateMachineResponse {
     string id = 1;
 }
 
-message GetMachineDetailsRequest {}
+message GetMachineDetailsRequest {
+    string id = 1;
+}
 
-message GetMachineDetailsResponse {}
+message GetMachineDetailsResponse {
+    Machine machine = 1;
+}
 
-message DeleteMachineRequest {}
+message DeleteMachineRequest {
+    string id = 1;
+}
 
-message DeleteMachineResponse {}
+message DeleteMachineResponse {
+}
+
+message CreateSSHKeyRequest {
+    string name = 1;
+    string pubkey = 2;
+}
+
+message CreateSSHKeyResponse {
+    string id = 1;
+}
+
+message DeleteSSHKeyRequest {
+    string id = 1;
+}
+
+message DeleteSSHKeyResponse {}
+
+message ListSSHKeysRequest {}
+
+message ListSSHKeysResponse {
+    repeated SSHKey keys = 1;
+}
+
+message ListImagesRequest {}
+
+message ListImagesResponse {
+    repeated Image images = 1;
+}

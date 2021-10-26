@@ -15,11 +15,12 @@ service VirtM {
 message CreateMachineRequest {
     string name = 1;
     Machine.Specs specs = 2;
+    string imageId = 3;
 }
 
 
 message CreateMachineResponse {
-
+    string id = 1;
 }
 
 message GetMachineDetailsRequest {}

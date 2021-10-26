@@ -27,11 +27,13 @@ message Image {
 message Machine {
     string id = 1;
     string name = 2;
-    Specs specs = 3;
-    Network network = 4;
 
-    string imageId = 5;
-    string sshKeyId = 6;
+    Status status = 3;
+    Specs specs = 4;
+    Network network = 5;
+
+    string imageId = 6;
+    string sshKeyId = 7;
 
     message Specs {
         int64 cpus = 1;
@@ -44,5 +46,13 @@ message Machine {
         string ipV6 = 2;
         string privateDns = 3;
         string publicDns = 4;
+    }
+
+    enum Status {
+        STATUS_UNSPECIFIED = 0;
+        CREATING = 1;
+        STOPPED = 2;
+        RUNNING = 3;
+        DESTROYED = 4;
     }
 }

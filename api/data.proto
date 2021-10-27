@@ -50,7 +50,7 @@ message Machine {
 
     enum Status {
         STATUS_UNSPECIFIED = 0;
-        CREATING = 1;
+        CREATED = 1;
         STOPPED = 2;
         RUNNING = 3;
         DESTROYED = 4;

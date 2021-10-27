@@ -3,7 +3,9 @@ package driver
 import (
 	"context"
 	"fmt"
+	"log"
 
+	"github.com/google/uuid"
 	"github.com/valar/virtm/api"
 	"github.com/valar/virtm/driver/libvirt"
 	"github.com/valar/virtm/driver/models"
@@ -58,18 +60,85 @@ func (driver *Driver) ListImages(ctx context.Context, request *api.ListImagesReq
 }
 
 func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMachineRequest) (*api.CreateMachineResponse, error) {
+	// Retrieve SSH key and image
 	var sshKey models.SSHKey
-	if result := driver.db.Where("id = ?", request.SshKeyId).First(&sshKey); result.Error != nil {
+	if result := driver.db.Where("id = ? OR name = ?", request.SshKeyId, request.SshKeyId).First(&sshKey); result.Error != nil {
 		return nil, grpc.Errorf(codes.NotFound, "retrieve ssh key: %v", result.Error)
 	}
 	var image models.Image
-	if result := driver.db.Where("id = ?", request.ImageId).First(&image); result.Error != nil {
+	if result := driver.db.Where("id = ? OR name = ?", request.ImageId, request.ImageId).First(&image); result.Error != nil {
 		return nil, grpc.Errorf(codes.NotFound, "retrieve image: %v", result.Error)
 	}
-	// create entry in database
-	machine := models.Machine{}
+	// Create entry for machine in DB
+	machine := models.Machine{
+		ID:     uuid.New().String(),
+		Name:   request.Name,
+		Image:  image,
+		SSHKey: sshKey,
+		Specs: models.Specs{
+			CPUs:   request.Specs.Cpus,
+			Memory: request.Specs.Memory,
+			Disk:   request.Specs.Disk,
+		},
+	}
+	if result := driver.db.Create(&machine); result.Error != nil {
+		return nil, grpc.Errorf(codes.Internal, "create machine: %v", result.Error)
+	}
+	log.Println("created machine instance", machine.ID)
+	return &api.CreateMachineResponse{
+		Id: machine.ID,
+	}, nil
+}
 
-	return nil, nil
+func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMachineDetailsRequest) (*api.GetMachineDetailsResponse, error) {
+	// Use ID or name to find machine
+	var machine models.Machine
+	if err := driver.db.Where("id = ? OR name = ?", request.Id, request.Id).First(&machine).Error; err != nil {
+		return nil, grpc.Errorf(codes.Internal, "retrieve machine: %v", err)
+	}
+	// TODO(lnsp): Retrieve status data from libvirt
+	// Put info into protobuf
+	return &api.GetMachineDetailsResponse{
+		Machine: &api.Machine{
+			Id:     machine.ID,
+			Name:   machine.Name,
+			Status: api.Machine_CREATED,
+			Specs: &api.Machine_Specs{
+				Cpus:   machine.Specs.CPUs,
+				Memory: machine.Specs.Memory,
+				Disk:   machine.Specs.Disk,
+			},
+			ImageId:  machine.Image.ID,
+			SshKeyId: machine.SSHKey.ID,
+			Network:  &api.Machine_Network{},
+		},
+	}, nil
+}
+
+func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachinesRequest) (*api.ListMachinesResponse, error) {
+	machines := []models.Machine{}
+	if err := driver.db.Find(&machines).Error; err != nil {
+		return nil, grpc.Errorf(codes.Internal, "retrieve machines: %v", err)
+	}
+	apiMachines := make([]*api.Machine, len(machines))
+	for i := range machines {
+		apiMachines[i] = &api.Machine{
+			Id:     machines[i].ID,
+			Name:   machines[i].Name,
+			Status: api.Machine_CREATED,
+			Specs: &api.Machine_Specs{
+				Cpus:   machines[i].Specs.CPUs,
+				Memory: machines[i].Specs.Memory,
+				Disk:   machines[i].Specs.Disk,
+			},
+			ImageId:  machines[i].Image.ID,
+			SshKeyId: machines[i].SSHKey.ID,
+			Network:  &api.Machine_Network{},
+		}
+	}
+	return &api.ListMachinesResponse{
+		Machines: apiMachines,
+	}, nil
 }
 
 func initModels(db *gorm.DB) error {

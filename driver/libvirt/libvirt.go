@@ -85,17 +85,12 @@ func writeCloudConfig(id string, pubKey string) (string, error) {
 	return ccTempFile.Name(), nil
 }
 
-func writeNetworkConfig(id string, ipAddresses []string, gateway string, nameserver []string) (string, error) {
+func writeNetworkConfig(id string) (string, error) {
 	netcfg := cloudconfig.NetworkConfig{
 		Version: 2,
 		Ethernets: map[string]cloudconfig.NetworkEthernet{
 			"eth0": {
-				DHCPv4:      false,
-				Addresses:   ipAddresses,
-				GatewayIPv4: gateway,
-				Nameservers: cloudconfig.NetworkNameservers{
-					Addresses: nameserver,
-				},
+				DHCPv4: true,
 			},
 		},
 	}
@@ -130,7 +125,7 @@ func (lv *Libvirt) CreateMachine(id string, sshKey models.SSHKey, image models.I
 	}
 	log.Println("created cloud config", cloudcfg)
 	// Create network config
-	netcfg, err := writeNetworkConfig(id, []string{"192.168.100.22/24"}, "192.168.100.1", []string{"192.168.100.1", "1.1.1.1"})
+	netcfg, err := writeNetworkConfig(id)
 	if err != nil {
 		return fmt.Errorf("network config: %w", err)
 	}

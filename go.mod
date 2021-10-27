@@ -4,6 +4,7 @@ go 1.16
 
 require (
 	github.com/google/go-cmp v0.5.6 // indirect
+	github.com/google/uuid v1.1.2
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libvirt/libvirt-go v7.4.0+incompatible
 	github.com/spf13/cobra v1.2.1

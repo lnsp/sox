@@ -9,6 +9,7 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/valar/virtm/api"
+	"github.com/valar/virtm/meta"
 	"google.golang.org/grpc"
 )
 
@@ -19,8 +20,9 @@ var insecure bool
 var timeout time.Duration
 
 var rootCmd = cobra.Command{
-	Use:   "virtm-cli",
-	Short: "CLI for interacting with a VirtM instance",
+	Use:     "virtm-cli",
+	Short:   "CLI for interacting with a VirtM instance",
+	Version: meta.Version,
 }
 
 var imagesCmd = cobra.Command{
@@ -35,7 +37,7 @@ var imagesCmd = cobra.Command{
 		// create context
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
-		// list ssh keys
+		// list images
 		resp, err := client.ListImages(ctx, &api.ListImagesRequest{})
 		if err != nil {
 			return err
@@ -84,6 +86,54 @@ var sshKeysCmd = cobra.Command{
 var machinesCmd = cobra.Command{
 	Use:   "machines",
 	Short: "Manage machine instances",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// list machines
+		resp, err := client.ListMachines(ctx, &api.ListMachinesRequest{})
+		if err != nil {
+			return err
+		}
+		// print out machines in table format
+		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
+		defer tw.Flush()
+
+		fmt.Fprintf(tw, "ID\tNAME\tSTATUS\tIPv4\n")
+		for _, machine := range resp.Machines {
+			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", machine.Id, machine.Name, machine.Status, machine.Network.IpV4)
+		}
+		return nil
+	},
+}
+
+var machinesInspectCmd = cobra.Command{
+	Use:   "inspect [name]",
+	Short: "Display detailed information on the machine instance",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// get details
+		resp, err := client.GetMachineDetails(ctx, &api.GetMachineDetailsRequest{
+			Id: args[0],
+		})
+		if err != nil {
+			return err
+		}
+		// print out machine details
+		fmt.Fprintf(os.Stdout, "%+v\n", resp.Machine)
+		return nil
+	},
 }
 
 var machinesCreateCpu int64

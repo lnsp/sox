@@ -19,6 +19,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type VirtMClient interface {
 	CreateMachine(ctx context.Context, in *CreateMachineRequest, opts ...grpc.CallOption) (*CreateMachineResponse, error)
+	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
 	GetMachineDetails(ctx context.Context, in *GetMachineDetailsRequest, opts ...grpc.CallOption) (*GetMachineDetailsResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
 	CreateSSHKey(ctx context.Context, in *CreateSSHKeyRequest, opts ...grpc.CallOption) (*CreateSSHKeyResponse, error)
@@ -38,6 +39,15 @@ func NewVirtMClient(cc grpc.ClientConnInterface) VirtMClient {
 func (c *virtMClient) CreateMachine(ctx context.Context, in *CreateMachineRequest, opts ...grpc.CallOption) (*CreateMachineResponse, error) {
 	out := new(CreateMachineResponse)
 	err := c.cc.Invoke(ctx, "/virtm.VirtM/CreateMachine", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *virtMClient) ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error) {
+	out := new(ListMachinesResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/ListMachines", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -103,6 +113,7 @@ func (c *virtMClient) ListImages(ctx context.Context, in *ListImagesRequest, opt
 // for forward compatibility
 type VirtMServer interface {
 	CreateMachine(context.Context, *CreateMachineRequest) (*CreateMachineResponse, error)
+	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
 	GetMachineDetails(context.Context, *GetMachineDetailsRequest) (*GetMachineDetailsResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
 	CreateSSHKey(context.Context, *CreateSSHKeyRequest) (*CreateSSHKeyResponse, error)
@@ -118,6 +129,9 @@ type UnimplementedVirtMServer struct {
 
 func (UnimplementedVirtMServer) CreateMachine(context.Context, *CreateMachineRequest) (*CreateMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateMachine not implemented")
+}
+func (UnimplementedVirtMServer) ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListMachines not implemented")
 }
 func (UnimplementedVirtMServer) GetMachineDetails(context.Context, *GetMachineDetailsRequest) (*GetMachineDetailsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetMachineDetails not implemented")
@@ -164,6 +178,24 @@ func _VirtM_CreateMachine_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VirtMServer).CreateMachine(ctx, req.(*CreateMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VirtM_ListMachines_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListMachinesRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).ListMachines(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/ListMachines",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).ListMachines(ctx, req.(*ListMachinesRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -286,6 +318,10 @@ var VirtM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateMachine",
 			Handler:    _VirtM_CreateMachine_Handler,
+		},
+		{
+			MethodName: "ListMachines",
+			Handler:    _VirtM_ListMachines_Handler,
 		},
 		{
 			MethodName: "GetMachineDetails",

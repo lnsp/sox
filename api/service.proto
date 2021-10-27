@@ -8,6 +8,7 @@ import "data.proto";
 
 service VirtM {
     rpc CreateMachine(CreateMachineRequest) returns (CreateMachineResponse);
+    rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse);
     rpc GetMachineDetails(GetMachineDetailsRequest) returns (GetMachineDetailsResponse);
     rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse);
 
@@ -27,6 +28,14 @@ message CreateMachineRequest {
 
 message CreateMachineResponse {
     string id = 1;
+}
+
+message ListMachinesRequest {
+}
+
+
+message ListMachinesResponse {
+    repeated Machine machines = 1;
 }
 
 message GetMachineDetailsRequest {

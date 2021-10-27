@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"github.com/valar/virtm/api"
 	"github.com/valar/virtm/driver"
@@ -14,36 +15,47 @@ import (
 	"google.golang.org/grpc"
 )
 
+type config struct {
+	Database struct {
+		DSN string
+	}
+	Libvirt struct {
+		URI string
+	}
+	gRPC struct {
+		Address string
+	}
+}
+
 var rootCmd = cobra.Command{
-	Use:     "virtm",
+	Use:     "virtm [config]",
 	Short:   "Experimental virtual machine manager",
 	Version: meta.Version,
-	Args:    cobra.NoArgs,
+	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		run()
+		run(args[0])
 	},
 }
 
-var db string
-var address string
-var libvirt string
-
-func init() {
-	flags := rootCmd.Flags()
-	flags.StringVar(&db, "db", "virtm.db", "Path to database")
-	flags.StringVar(&address, "address", "localhost:9876", "Address to listen on")
-	flags.StringVar(&libvirt, "libvirt", "qemu:///system", "Libvirt instance")
-}
-
-func run() {
+func run(cfgpath string) {
+	// load config
+	cfgdata, err := os.ReadFile(cfgpath)
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
+	}
+	// decode config
+	var cfg config
+	if err := toml.Unmarshal(cfgdata, &cfg); err != nil {
+		log.Fatalf("failed to decode config: %v", err)
+	}
 	// start vm manager
-	driver, err := driver.New(db, libvirt)
+	driver, err := driver.New(cfg.Database.DSN, cfg.Libvirt.URI)
 	if err != nil {
 		log.Fatalf("failed to start driver: %v", err)
 	}
 	log.Println("initialized vm driver")
 	// setup listener
-	listener, err := net.Listen("tcp", address)
+	listener, err := net.Listen("tcp", cfg.gRPC.Address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}

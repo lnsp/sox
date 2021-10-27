@@ -1,0 +1,8 @@
+[database]
+path = "virtm.db"
+
+[grpc]
+address = "localhost:9876"
+
+[libvirt]
+uri = "qemu:///system"

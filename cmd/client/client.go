@@ -131,7 +131,14 @@ var machinesInspectCmd = cobra.Command{
 			return err
 		}
 		// print out machine details
-		fmt.Fprintf(os.Stdout, "%+v\n", resp.Machine)
+		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
+		defer tw.Flush()
+
+		fmt.Fprintf(tw, "%s\t%s\n", "ID", resp.Machine.Id)
+		fmt.Fprintf(tw, "%s\t%s\n", "Name", resp.Machine.Name)
+		fmt.Fprintf(tw, "%s\t%s\n", "Status", resp.Machine.Status)
+		fmt.Fprintf(tw, "%s\t%+v\n", "Specs", resp.Machine.Specs)
+		fmt.Fprintf(tw, "%s\t%+v\n", "Network", resp.Machine.Network)
 		return nil
 	},
 }
@@ -181,6 +188,7 @@ func init() {
 	rootCmd.AddCommand(&sshKeysCmd)
 	rootCmd.AddCommand(&machinesCmd)
 	machinesCmd.AddCommand(&machinesCreateCmd)
+	machinesCmd.AddCommand(&machinesInspectCmd)
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateImage, "image", "i", "", "Operating system image")
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateSSHKey, "ssh-key", "k", "", "SSH key for login")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateCpu, "cpu", 2, "Number of vCPUs")

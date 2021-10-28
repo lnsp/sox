@@ -22,7 +22,7 @@ type config struct {
 	Libvirt struct {
 		URI string
 	}
-	gRPC struct {
+	Grpc struct {
 		Address string
 	}
 }
@@ -55,10 +55,11 @@ func run(cfgpath string) {
 	}
 	log.Println("initialized vm driver")
 	// setup listener
-	listener, err := net.Listen("tcp", cfg.gRPC.Address)
+	listener, err := net.Listen("tcp", cfg.Grpc.Address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	log.Println("listening on", listener.Addr())
 	// setup options
 	var opts []grpc.ServerOption
 	// start server

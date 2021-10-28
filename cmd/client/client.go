@@ -103,9 +103,9 @@ var machinesCmd = cobra.Command{
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
 		defer tw.Flush()
 
-		fmt.Fprintf(tw, "ID\tNAME\tSTATUS\tIPv4\n")
+		fmt.Fprintf(tw, "ID\tNAME\tSTATUS\n")
 		for _, machine := range resp.Machines {
-			fmt.Fprintf(tw, "%s\t%s\t%s\t%s\n", machine.Id, machine.Name, machine.Status, machine.Network.IpV4)
+			fmt.Fprintf(tw, "%s\t%s\t%s\n", machine.Id, machine.Name, machine.Status)
 		}
 		return nil
 	},
@@ -138,7 +138,9 @@ var machinesInspectCmd = cobra.Command{
 		fmt.Fprintf(tw, "%s\t%s\n", "Name", resp.Machine.Name)
 		fmt.Fprintf(tw, "%s\t%s\n", "Status", resp.Machine.Status)
 		fmt.Fprintf(tw, "%s\t%+v\n", "Specs", resp.Machine.Specs)
-		fmt.Fprintf(tw, "%s\t%+v\n", "Network", resp.Machine.Network)
+		for _, net := range resp.Machine.Networks {
+			fmt.Fprintf(tw, "%s\t%+v\n", "Network", net)
+		}
 		return nil
 	},
 }
@@ -148,6 +150,7 @@ var machinesCreateMemory int64
 var machinesCreateDisk int64
 var machinesCreateImage string
 var machinesCreateSSHKey string
+var machinesCreateNetworks []string
 
 var machinesCreateCmd = cobra.Command{
 	Use:   "create [name]",
@@ -169,13 +172,69 @@ var machinesCreateCmd = cobra.Command{
 				Memory: machinesCreateMemory,
 				Disk:   machinesCreateDisk,
 			},
-			ImageId:  machinesCreateImage,
-			SshKeyId: machinesCreateSSHKey,
+			ImageId:    machinesCreateImage,
+			SshKeyId:   machinesCreateSSHKey,
+			NetworkIds: machinesCreateNetworks,
 		})
 		if err != nil {
 			return err
 		}
 		fmt.Fprintln(os.Stdout, resp.Id)
+		return nil
+	},
+}
+
+var machinesDeleteCmd = cobra.Command{
+	Use:   "delete [id | name]",
+	Short: "Delete an existing virtual machine instance",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// submit request
+		if _, err := client.DeleteMachine(ctx, &api.DeleteMachineRequest{
+			Id: args[0],
+		}); err != nil {
+			return err
+		}
+		return nil
+	},
+}
+
+var networksCmd = cobra.Command{
+	Use:          "networks",
+	Short:        "Manage virtual networks",
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// list networks
+		resp, err := client.ListNetworks(ctx, &api.ListNetworksRequest{})
+		if err != nil {
+			return err
+		}
+		// print out machine details
+		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
+		defer tw.Flush()
+
+		fmt.Fprintf(tw, "ID\tNAME\tSUBNET\tGATEWAY\n")
+		for _, net := range resp.Networks {
+			fmt.Fprintf(
+				tw,
+				"%s\t%s\t%s\t%s\n",
+				net.Id, net.Name, net.IpV4.Subnet, net.IpV4.Gateway,
+			)
+		}
 		return nil
 	},
 }
@@ -187,15 +246,19 @@ func init() {
 	rootCmd.AddCommand(&imagesCmd)
 	rootCmd.AddCommand(&sshKeysCmd)
 	rootCmd.AddCommand(&machinesCmd)
+	rootCmd.AddCommand(&networksCmd)
 	machinesCmd.AddCommand(&machinesCreateCmd)
 	machinesCmd.AddCommand(&machinesInspectCmd)
+	machinesCmd.AddCommand(&machinesDeleteCmd)
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateImage, "image", "i", "", "Operating system image")
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateSSHKey, "ssh-key", "k", "", "SSH key for login")
+	machinesCreateCmd.Flags().StringArrayVarP(&machinesCreateNetworks, "networks", "n", nil, "Network to connect to")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateCpu, "cpu", 2, "Number of vCPUs")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateDisk, "disk", 10000, "Disk size in MB")
-	machinesCreateCmd.Flags().Int64Var(&machinesCreateMemory, "memory", 2, "Memory size in MB")
+	machinesCreateCmd.Flags().Int64Var(&machinesCreateMemory, "memory", 2000, "Memory size in MB")
 	machinesCreateCmd.MarkFlagRequired("image")
 	machinesCreateCmd.MarkFlagRequired("ssh-key")
+	machinesCreateCmd.MarkFlagRequired("networks")
 }
 
 func connect() (api.VirtMClient, error) {

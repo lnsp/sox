@@ -17,6 +17,8 @@ service VirtM {
     rpc DeleteSSHKey(DeleteSSHKeyRequest) returns (DeleteSSHKeyResponse);
 
     rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
+
+    rpc ListNetworks(ListNetworksRequest) returns (ListNetworksResponse);
 }
 
 message CreateMachineRequest {
@@ -24,6 +26,7 @@ message CreateMachineRequest {
     Machine.Specs specs = 2;
     string imageId = 3;
     string sshKeyId = 4;
+    repeated string networkIds = 5;
 }
 
 message CreateMachineResponse {
@@ -78,4 +81,10 @@ message ListImagesRequest {}
 
 message ListImagesResponse {
     repeated Image images = 1;
+}
+
+message ListNetworksRequest {}
+
+message ListNetworksResponse {
+    repeated Network networks = 1;
 }

@@ -26,6 +26,7 @@ type VirtMClient interface {
 	ListSSHKeys(ctx context.Context, in *ListSSHKeysRequest, opts ...grpc.CallOption) (*ListSSHKeysResponse, error)
 	DeleteSSHKey(ctx context.Context, in *DeleteSSHKeyRequest, opts ...grpc.CallOption) (*DeleteSSHKeyResponse, error)
 	ListImages(ctx context.Context, in *ListImagesRequest, opts ...grpc.CallOption) (*ListImagesResponse, error)
+	ListNetworks(ctx context.Context, in *ListNetworksRequest, opts ...grpc.CallOption) (*ListNetworksResponse, error)
 }
 
 type virtMClient struct {
@@ -108,6 +109,15 @@ func (c *virtMClient) ListImages(ctx context.Context, in *ListImagesRequest, opt
 	return out, nil
 }
 
+func (c *virtMClient) ListNetworks(ctx context.Context, in *ListNetworksRequest, opts ...grpc.CallOption) (*ListNetworksResponse, error) {
+	out := new(ListNetworksResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/ListNetworks", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // VirtMServer is the server API for VirtM service.
 // All implementations must embed UnimplementedVirtMServer
 // for forward compatibility
@@ -120,6 +130,7 @@ type VirtMServer interface {
 	ListSSHKeys(context.Context, *ListSSHKeysRequest) (*ListSSHKeysResponse, error)
 	DeleteSSHKey(context.Context, *DeleteSSHKeyRequest) (*DeleteSSHKeyResponse, error)
 	ListImages(context.Context, *ListImagesRequest) (*ListImagesResponse, error)
+	ListNetworks(context.Context, *ListNetworksRequest) (*ListNetworksResponse, error)
 	mustEmbedUnimplementedVirtMServer()
 }
 
@@ -150,6 +161,9 @@ func (UnimplementedVirtMServer) DeleteSSHKey(context.Context, *DeleteSSHKeyReque
 }
 func (UnimplementedVirtMServer) ListImages(context.Context, *ListImagesRequest) (*ListImagesResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListImages not implemented")
+}
+func (UnimplementedVirtMServer) ListNetworks(context.Context, *ListNetworksRequest) (*ListNetworksResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ListNetworks not implemented")
 }
 func (UnimplementedVirtMServer) mustEmbedUnimplementedVirtMServer() {}
 
@@ -308,6 +322,24 @@ func _VirtM_ListImages_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _VirtM_ListNetworks_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListNetworksRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).ListNetworks(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/ListNetworks",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).ListNetworks(ctx, req.(*ListNetworksRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // VirtM_ServiceDesc is the grpc.ServiceDesc for VirtM service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -346,6 +378,10 @@ var VirtM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListImages",
 			Handler:    _VirtM_ListImages_Handler,
+		},
+		{
+			MethodName: "ListNetworks",
+			Handler:    _VirtM_ListNetworks_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

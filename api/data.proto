@@ -30,22 +30,16 @@ message Machine {
 
     Status status = 3;
     Specs specs = 4;
-    Network network = 5;
+    
+    repeated NetworkInterface networks = 5;
 
-    string imageId = 6;
-    string sshKeyId = 7;
+    string image_id = 6;
+    string ssh_key_id = 7;
 
     message Specs {
         int64 cpus = 1;
         int64 memory = 2;
         int64 disk = 3;
-    }
-
-    message Network {
-        string ipV4 = 1;
-        string ipV6 = 2;
-        string privateDns = 3;
-        string publicDns = 4;
     }
 
     enum Status {
@@ -55,4 +49,26 @@ message Machine {
         RUNNING = 3;
         DESTROYED = 4;
     }
+}
+
+message NetworkInterface {
+    string network_id = 1;
+    string ip_v4 = 2;
+    string ip_v6 = 3;
+}
+
+message Network {
+    string id = 1;
+    string name = 2;
+
+    IpNetwork ip_v4 = 3;
+    IpNetwork ip_v6 = 4;
+
+    message IpNetwork {
+        string subnet = 1;
+        string gateway = 2;
+    }
+
+    repeated string nameservers = 5;
+    repeated string searchDomains = 6;
 }

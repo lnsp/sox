@@ -3,5 +3,8 @@
         "options": [
             "-I=api/",
         ],
+    },
+    "go.alternateTools": {
+        "dlv": "${workspaceFolder}/.vscode/dlv-sudo.sh"
     }
 }

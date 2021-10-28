@@ -15,40 +15,32 @@ type Chpasswd struct {
 	List   []string `yaml:"list"`
 }
 
-type SetHostnameModule struct {
+type CloudConfig struct {
+	// SetHostnameModule
 	Hostname string `yaml:"hostname"`
 	FQDN     string `yaml:"fqdn"`
-}
 
-type ManageEtcHostsModule struct {
+	// ManageEtcHostsModule
 	ManageEtcHosts bool `yaml:"manage_etc_hosts"`
-}
 
-type UsersModule struct {
+	// UsersModule
 	Users []User `yaml:"users"`
-}
 
-type SetPasswordsModule struct {
+	// SetPasswordsModule
 	SSHPwAuth bool     `yaml:"ssh_pwauth"`
 	Chpasswd  Chpasswd `yaml:"chpasswd"`
-}
 
-type SSHModule struct {
-	DisableRoot bool `yaml:"disable_root"`
-}
-
-type PackageModule struct {
+	// PackageModule
 	Packages       []string `yaml:"packages"`
 	PackageUpdate  bool     `yaml:"package_update"`
 	PackageUpgrade bool     `yaml:"package_upgrade"`
-}
 
-type CloudConfig struct {
-	SetHostnameModule
-	ManageEtcHostsModule
-	UsersModule
-	SetPasswordsModule
-	PackageModule
+	// SSHModule
+	DisableRoot bool `yaml:"disable_root"`
+
+	// ResolvConfModule
+	ManageResolvConf bool       `yaml:"manage_resolv_conf"`
+	ResolvConf       ResolvConf `yaml:"resolv_conf"`
 }
 
 type NetworkNameservers struct {
@@ -66,4 +58,16 @@ type NetworkEthernet struct {
 type NetworkConfig struct {
 	Version   int                        `yaml:"version"`
 	Ethernets map[string]NetworkEthernet `yaml:"ethernets"`
+}
+
+type ResolvConfOptions struct {
+	Rotate  bool `yaml:"rotate"`
+	Timeout int  `yaml:"timeout"`
+}
+
+type ResolvConf struct {
+	Nameservers   []string          `yaml:"nameservers"`
+	SearchDomains []string          `yaml:"searchdomains"`
+	Domain        string            `yaml:"domain"`
+	Options       ResolvConfOptions `yaml:"options"`
 }

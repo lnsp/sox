@@ -7,7 +7,7 @@ require (
 	github.com/google/uuid v1.1.2
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libvirt/libvirt-go v7.4.0+incompatible
-	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible // indirect
+	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 	github.com/pelletier/go-toml v1.9.3
 	github.com/spf13/cobra v1.2.1
 	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect

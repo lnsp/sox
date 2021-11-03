@@ -41,6 +41,13 @@ type CloudConfig struct {
 	// ResolvConfModule
 	ManageResolvConf bool       `yaml:"manage_resolv_conf"`
 	ResolvConf       ResolvConf `yaml:"resolv_conf"`
+
+	// WriteFilesModule
+	WriteFiles []WriteFile `yaml:"write_files"`
+}
+
+type WriteFile struct {
+	Content string `yaml:"content"`
 }
 
 type NetworkNameservers struct {

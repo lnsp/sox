@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"text/template"
+
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/valar/virtm/driver/cloudconfig"
@@ -44,13 +46,51 @@ func New(uri string, network string, storagePool string) (*Libvirt, error) {
 	return &Libvirt{conn, net, storage}, nil
 }
 
-func writeCloudConfig(machine *models.Machine) (string, error) {
-	var nameservers, searchDomains []string
-	for _, iface := range machine.NetworkInterfaces {
-		nameservers = append(nameservers, strings.Fields(iface.Network.Nameservers)...)
-		searchDomains = append(searchDomains, strings.Fields(iface.Network.SearchDomains)...)
+var networkIfaceTemplate = template.Must(template.New("network").Parse(`
+auto {{ .Name }}
+iface {{ .Name }} inet static
+	address {{ .AddressCIDR }}
+	gateway {{ .Gateway }}
+	dns-nameservers{{ range .Nameservers }} {{ . }}{{ end }}
+`))
+
+func configureImageNetworkInterface(machine *models.Machine, image string) error {
+	// Create single tempdir
+	netdir, err := os.MkdirTemp("", machine.ID)
+	if err != nil {
+		return fmt.Errorf("create netcfg dir: %w", err)
 	}
-	// Concatenate nameservers
+	// Create single tempfile
+	netcfg, err := os.Create(filepath.Join(netdir, "10-netcfg"))
+	if err != nil {
+		return fmt.Errorf("create netcfg file: %w", err)
+	}
+	defer netcfg.Close()
+	// Write configuration to netcfg
+	for i, iface := range machine.NetworkInterfaces {
+		if err := networkIfaceTemplate.Execute(netcfg, struct {
+			Name        string
+			AddressCIDR string
+			Nameservers []string
+			Gateway     string
+		}{
+			Name:        fmt.Sprintf("enp1s%d", i),
+			Nameservers: strings.Fields(iface.Network.Nameservers),
+			AddressCIDR: iface.IPv4,
+			Gateway:     iface.Network.IPv4.Gateway,
+		}); err != nil {
+			return fmt.Errorf("write netcfg item: %w", err)
+		}
+	}
+	// Use virt-customize to push config file into /etc/network/interfaces.d
+	if err := exec.Command("virt-customize", "-a", image, "--copy-in", netcfg.Name()+":/etc/network/interfaces.d").Run(); err != nil {
+		return fmt.Errorf("copy netcfg to vm: %w", err)
+	}
+	log.Println("configured image network", netcfg.Name())
+	return nil
+}
+
+func writeCloudConfig(machine *models.Machine) (string, error) {
 	// Create cloud config
 	shortuuid := machine.ID[:8]
 	cc := cloudconfig.CloudConfig{
@@ -68,19 +108,9 @@ func writeCloudConfig(machine *models.Machine) (string, error) {
 				AuthorizedKeys: machine.SSHKey.Pubkey,
 			},
 		},
-
 		Chpasswd: cloudconfig.Chpasswd{
 			List:   []string{"debian:debian"},
 			Expire: false,
-		},
-
-		Packages:      []string{"qemu-guest-agent"},
-		PackageUpdate: true,
-
-		ManageResolvConf: true,
-		ResolvConf: cloudconfig.ResolvConf{
-			Nameservers:   nameservers,
-			SearchDomains: searchDomains,
 		},
 	}
 	content, err := yaml.Marshal(cc)
@@ -97,39 +127,6 @@ func writeCloudConfig(machine *models.Machine) (string, error) {
 		return "", fmt.Errorf("write cloudconfig: %w", err)
 	}
 	return ccTempFile.Name(), nil
-}
-
-func writeNetworkConfig(machine *models.Machine) (string, error) {
-	ethernets := make(map[string]cloudconfig.NetworkEthernet)
-	for i := range machine.NetworkInterfaces {
-		ethernets[fmt.Sprintf("enp1s%d", i)] =
-			cloudconfig.NetworkEthernet{
-				DHCPv4:      false,
-				Addresses:   []string{machine.NetworkInterfaces[i].IPv4},
-				GatewayIPv4: machine.NetworkInterfaces[i].Network.IPv4.Gateway,
-				Nameservers: cloudconfig.NetworkNameservers{
-					Addresses:     strings.Fields(machine.NetworkInterfaces[i].Network.Nameservers),
-					SearchDomains: strings.Fields(machine.NetworkInterfaces[i].Network.SearchDomains),
-				},
-			}
-	}
-	netcfg := cloudconfig.NetworkConfig{
-		Version:   2,
-		Ethernets: ethernets,
-	}
-	content, err := yaml.Marshal(netcfg)
-	if err != nil {
-		return "", fmt.Errorf("marshal network config: %w", err)
-	}
-	netcfgTempFile, err := os.CreateTemp("", machine.ID)
-	if err != nil {
-		return "", fmt.Errorf("create temp netconfig: %w", err)
-	}
-	defer netcfgTempFile.Close()
-	if _, err := netcfgTempFile.Write(content); err != nil {
-		return "", fmt.Errorf("write netconfig: %w", err)
-	}
-	return netcfgTempFile.Name(), nil
 }
 
 func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifaces []models.NetworkInterface) string {
@@ -283,6 +280,18 @@ func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {
 	return nil
 }
 
+// writeDisabledNetworkConfig creates a basic network config that disabled cloud-init networking setup.
+func writeDisabledNetworkConfig() (string, error) {
+	// Create basic network config
+	netcfg, err := os.CreateTemp("", "netcfg")
+	if err != nil {
+		return "", fmt.Errorf("network config: %w", err)
+	}
+	defer netcfg.Close()
+	fmt.Fprintln(netcfg, "network: { config: disabled }")
+	return netcfg.Name(), nil
+}
+
 func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	// Get source img path
 	configImagePath := filepath.Join(filepath.Dir(machine.Image.Path), machine.ID+"-config.img")
@@ -293,20 +302,22 @@ func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 		return fmt.Errorf("create image snapshot: %w", err)
 	}
 	log.Println("replicated image", machine.Image.ID, "to", osImagePath)
+	// Setup networking in snapshot
+	if err := configureImageNetworkInterface(machine, osImagePath); err != nil {
+		return fmt.Errorf("configure image network: %w", err)
+	}
+	netcfg, err := writeDisabledNetworkConfig()
+	if err != nil {
+		return fmt.Errorf("network config: %w", err)
+	}
 	// Create cloud config
 	cloudcfg, err := writeCloudConfig(machine)
 	if err != nil {
 		return fmt.Errorf("cloud config: %w", err)
 	}
 	log.Println("created cloud config", cloudcfg)
-	// Create network config
-	netcfg, err := writeNetworkConfig(machine)
-	if err != nil {
-		return fmt.Errorf("network config: %w", err)
-	}
-	log.Println("create network config", netcfg)
 	// Merge into image
-	if err := exec.Command("cloud-localds", "-v", "--network-config="+netcfg, configImagePath, cloudcfg).Run(); err != nil {
+	if err := exec.Command("cloud-localds", "-v", "-N", netcfg, configImagePath, cloudcfg).Run(); err != nil {
 		return fmt.Errorf("merge config: %w", err)
 	}
 	// Generate domain xml

@@ -12,7 +12,7 @@ CLIENT_BINARY_NAME=$(BIN_FOLDER)/virtm-cli
 VERSION := $(shell date -u +"%Y.%m.%d-%s")
 export VERSION
 
-all: proto build
+all: build
 
 proto:
 	protoc -I api/ --go_out=api/ --go_opt=paths=source_relative --go-grpc_out=api/ --go-grpc_opt=paths=source_relative data.proto service.proto

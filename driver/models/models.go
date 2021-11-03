@@ -30,14 +30,14 @@ func (s Specs) String() string {
 
 type Image struct {
 	ID   string `gorm:"primaryKey"`
-	Name string
+	Name string `gorm:"uniqueIndex"`
 	OS   string
 	Path string
 }
 
 type SSHKey struct {
 	ID     string `gorm:"primaryKey"`
-	Name   string
+	Name   string `gorm:"uniqueIndex"`
 	Pubkey string
 }
 
@@ -56,7 +56,7 @@ type NetworkInterface struct {
 
 type Network struct {
 	ID   string `gorm:"primaryKey"`
-	Name string
+	Name string `gorm:"uniqueIndex"`
 
 	IPv4 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv4_"`
 	IPv6 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv6_"`

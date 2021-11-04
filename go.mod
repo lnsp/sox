@@ -5,6 +5,8 @@ go 1.16
 require (
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.2
+	github.com/gorilla/handlers v1.5.1 // indirect
+	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/kr/text v0.2.0 // indirect
 	github.com/libvirt/libvirt-go v7.4.0+incompatible
 	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible

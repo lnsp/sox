@@ -6,7 +6,7 @@
       <slot></slot>
     </div>
 
-    <div v-if="!collapsed" class="ml-2 group-hover:text-gray-100" :class="{ 'text-gray-100': active, 'text-gray-400': !active }">{{ name }}</div>
+    <div v-if="!collapsed" class="ml-3 group-hover:text-gray-100" :class="{ 'text-gray-100': active, 'text-gray-400': !active }">{{ name }}</div>
   </li>
 </template>
 

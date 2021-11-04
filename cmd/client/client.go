@@ -75,7 +75,7 @@ var sshKeysCmd = cobra.Command{
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
 		defer tw.Flush()
 
-		fmt.Fprintf(tw, "ID\tNAME\tFOOTPRINT\n")
+		fmt.Fprintf(tw, "ID\tNAME\tFINGERPRINT\n")
 		for _, key := range resp.Keys {
 			fmt.Fprintf(tw, "%s\t%s\t%.32s\n", key.Id, key.Name, key.Pubkey)
 		}

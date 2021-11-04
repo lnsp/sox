@@ -8,6 +8,7 @@ BIN_FOLDER=bin
 
 SERVER_BINARY_NAME=$(BIN_FOLDER)/virtm
 CLIENT_BINARY_NAME=$(BIN_FOLDER)/virtm-cli
+UI_BINARY_NAME=$(BIN_FOLDER)/virtm-ui
 
 VERSION := $(shell date -u +"%Y.%m.%d-%s")
 export VERSION
@@ -23,6 +24,7 @@ $(BIN_FOLDER):
 build: bin
 	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(SERVER_BINARY_NAME) -v ./cmd/server
 	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(CLIENT_BINARY_NAME) -v ./cmd/client
+	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(UI_BINARY_NAME) -v ./cmd/ui
 
 test: 
 	$(GOTEST) -v ./...

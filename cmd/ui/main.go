@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gorilla/handlers"
@@ -70,6 +71,9 @@ func (handler *APIHandler) Init(mux *mux.Router) error {
 	// Setup routes
 	mux.Handle("/", handler.version()).Methods("GET")
 	mux.Handle("/machines", handler.listMachines()).Methods("GET")
+	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods("GET")
+	mux.Handle("/images", handler.listImages()).Methods("GET")
+	mux.Handle("/networks", handler.listNetworks()).Methods("GET")
 	return nil
 }
 
@@ -97,28 +101,92 @@ func (handler *APIHandler) listMachines() http.Handler {
 			Name   string `json:"name"`
 			Status string `json:"status"`
 		}
-		jsonMachines := make([]jsonMachine, len(resp.Machines))
+		machines := make([]jsonMachine, len(resp.Machines))
 		for i := range resp.Machines {
-			jsonMachines[i] = jsonMachine{
+			machines[i] = jsonMachine{
 				ID:     resp.Machines[i].Id,
 				Name:   resp.Machines[i].Name,
 				Status: resp.Machines[i].Status.String(),
 			}
 		}
-		encoder := json.NewEncoder(w)
-		encoder.Encode(jsonMachines)
+		json.NewEncoder(w).Encode(machines)
 	})
 }
 
 func (handler *APIHandler) listSSHKeys() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
+		resp, err := handler.Client.ListSSHKeys(r.Context(), &api.ListSSHKeysRequest{})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("fetch ssh keys:", err)
+			return
+		}
+		type jsonSSHKey struct {
+			ID          string `json:"id"`
+			Name        string `json:"name"`
+			Fingerprint string `json:"fingerprint"`
+		}
+		sshKeys := make([]jsonSSHKey, len(resp.Keys))
+		for i := range resp.Keys {
+			sshKeys[i] = jsonSSHKey{
+				ID:          resp.Keys[i].Id,
+				Name:        resp.Keys[i].Name,
+				Fingerprint: strings.Fields(resp.Keys[i].Pubkey)[1][:16],
+			}
+		}
+		json.NewEncoder(w).Encode(sshKeys)
 	})
 }
 
 func (handler *APIHandler) listImages() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp, err := handler.Client.ListImages(r.Context(), &api.ListImagesRequest{})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("fetch images:", err)
+			return
+		}
+		type jsonImage struct {
+			ID     string `json:"id"`
+			Name   string `json:"name"`
+			System string `json:"system"`
+		}
+		images := make([]jsonImage, len(resp.Images))
+		for i := range resp.Images {
+			images[i] = jsonImage{
+				ID:     resp.Images[i].Id,
+				Name:   resp.Images[i].Name,
+				System: resp.Images[i].System.String(),
+			}
+		}
+		json.NewEncoder(w).Encode(images)
+	})
+}
 
+func (handler *APIHandler) listNetworks() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp, err := handler.Client.ListNetworks(r.Context(), &api.ListNetworksRequest{})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("fetch networks:", err)
+			return
+		}
+		type jsonNetwork struct {
+			ID   string `json:"id"`
+			Name string `json:"name"`
+			IPv4 string `json:"ipv4"`
+			IPv6 string `json:"ipv6"`
+		}
+		networks := make([]jsonNetwork, len(resp.Networks))
+		for i := range resp.Networks {
+			networks[i] = jsonNetwork{
+				ID:   resp.Networks[i].Id,
+				Name: resp.Networks[i].Name,
+				IPv4: resp.Networks[i].IpV4.Subnet,
+				IPv6: resp.Networks[i].IpV6.Subnet,
+			}
+		}
+		json.NewEncoder(w).Encode(networks)
 	})
 }
 

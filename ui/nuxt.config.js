@@ -48,7 +48,9 @@ export default {
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  axios: {},
+  axios: {
+    baseURL: process.env.NODE_ENV !== 'production' ? (process.env.API_URL || 'http://localhost:9877/api') : '/api',
+  },
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
@@ -59,5 +61,5 @@ export default {
     families: {
       Inter: [400, 500, 600],
     }
-  }
+  },
 }

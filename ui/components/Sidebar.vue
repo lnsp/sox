@@ -21,14 +21,17 @@
             </g>
           </g>
         </svg>
-        <span class="ml-2"
+        <div class="ml-2"
               v-if="!collapsed">
           VirtM
-        </span>
+          <div class="text-xs text-gray-400">
+            {{ version }}
+          </div>
+        </div>
       </div>
-      <ul class="py-0 px-4">
+      <nav class="py-0 px-4">
         <sidebar-item name="Home"
-                      :collapsed="collapsed">
+                      :collapsed="collapsed" to="/">
           <svg xmlns="http://www.w3.org/2000/svg"
                class="h-6 w-6"
                fill="none"
@@ -40,13 +43,13 @@
                   d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
         </sidebar-item>
-        <sidebar-divider />
+        <divider />
         <sidebar-section name="Virtual machines"
                          shortname="VMs"
                          :collapsed="collapsed">
           <sidebar-item name="Machines"
                         :collapsed="collapsed"
-                        :active="true">
+                        to="/machines">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-6 w-6"
                  fill="none"
@@ -59,7 +62,7 @@
             </svg>
           </sidebar-item>
           <sidebar-item name="SSH Keys"
-                        :collapsed="collapsed">
+                        :collapsed="collapsed" to="/ssh-keys">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-6 w-6"
                  fill="none"
@@ -72,7 +75,7 @@
             </svg>
           </sidebar-item>
           <sidebar-item name="Images"
-                        :collapsed="collapsed">
+                        :collapsed="collapsed" to="/images">
             <svg xmlns="http://www.w3.org/2000/svg"
                  class="h-6 w-6"
                  fill="none"
@@ -85,10 +88,10 @@
             </svg>
           </sidebar-item>
         </sidebar-section>
-      </ul>
+      </nav>
     </div>
     <div class="p-4">
-      <div class="bg-gray-900 rounded-lg hover:text-gray-100 hover:bg-gray-800 text-gray-400 px-5 py-3 inline-block" @click="collapsed = !collapsed">
+      <button class="bg-gray-900 rounded-lg hover:text-gray-100 hover:bg-gray-800 text-gray-400 px-5 py-3 inline-block" @click="collapsed = !collapsed">
         <template v-if="collapsed">
           <svg xmlns="http://www.w3.org/2000/svg"
                class="h-6 w-6"
@@ -113,17 +116,25 @@
                   d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
           </svg>
         </template>
-      </div>
+      </button>
     </div>
   </div>
 </template>
 
 <script>
 export default {
+  computed: {
+    version() {
+      return this.$store.state.api.version
+    },
+  },
   data() {
     return {
       collapsed: true,
     };
   },
+  mounted() {
+    this.$store.dispatch('api/connect')
+  }
 };
 </script>

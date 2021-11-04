@@ -1,13 +1,15 @@
 <template>
   <div class="flex flex-row">
     <Sidebar />
-    <Nuxt class="flex-grow"/>
+    <div class="flex-grow bg-gray-100 p-6">
+      <Nuxt />
+    </div>
   </div>
 </template>
 
 <style>
 body {
-  font-family: 'Inter';
+  font-family: "Inter";
 }
 </style>
 

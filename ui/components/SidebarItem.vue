@@ -1,17 +1,31 @@
 <template>
-  <li class="rounded-lg flex items-center px-5 py-3 my-2 cursor-pointer group hover:bg-gray-800"
-      :class="{ 'bg-gray-700': active }">
-    <div class="group-hover:text-gray-100"
-         :class="{ 'text-gray-100': active, 'text-gray-400': !active }">
-      <slot></slot>
+  <nuxt-link v-slot="{ isActive, isExactActive, navigate, route }"
+             custom
+             :to="to">
+    <div :set="active = matches(isActive, isExactActive, route)">
+      <a class="rounded-lg flex items-center px-5 py-3 my-2 group hover:bg-gray-800 cursor-pointer"
+         @click="navigate"
+         :href="route.fullPath"
+         :class="[active ? ['bg-gray-700'] : ['bg-gray-900']]">
+        <div class="group-hover:text-gray-100 link-icon"
+             :class="[active ? ['text-gray-100'] : ['text-gray-400']]">
+          <slot></slot>
+        </div>
+        <div v-if="!collapsed"
+             class="link-text ml-3 group-hover:text-gray-100"
+             :class="[active ? ['text-gray-100'] : ['text-gray-400']]">{{ name }}</div>
+      </a>
     </div>
-
-    <div v-if="!collapsed" class="ml-3 group-hover:text-gray-100" :class="{ 'text-gray-100': active, 'text-gray-400': !active }">{{ name }}</div>
-  </li>
+  </nuxt-link>
 </template>
 
 <script>
 export default {
-  props: ["name", "active", "collapsed"],
+  props: ["name", "collapsed", "to"],
+  methods: {
+    matches(active, exactActive, route) {
+      return route.fullPath === "/" ? exactActive : active;
+    },
+  },
 };
 </script>

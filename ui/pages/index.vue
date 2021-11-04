@@ -1,5 +1,7 @@
 <template>
-  <div class="bg-gray-100">123</div>
+  <div class="p-4">
+
+  </div>
 </template>
 
 <script>

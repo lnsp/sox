@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 	"time"
 
@@ -53,11 +52,11 @@ func main() {
 	}
 	// Setup CORS
 	if *dev {
-		allowedHeaders := []string{"Accept", "Accept-Language", "Content-Language", "Origin", "Content-Type"}
-		router.Use(handlers.CORS(handlers.AllowedHeaders(allowedHeaders)))
+		methods := handlers.AllowedMethods([]string{"DELETE", "GET", "HEAD", "POST"})
+		headers := handlers.AllowedHeaders([]string{"Content-Type"})
+		origins := handlers.AllowedOrigins([]string{"*"})
+		server.Handler = handlers.CORS(methods, headers, origins)(router)
 	}
-	// Setup logging
-	server.Handler = handlers.LoggingHandler(os.Stdout, server.Handler)
 	// Listen and serve
 	if err := server.ListenAndServe(); err != nil {
 		log.Fatalln("serve:", err)
@@ -72,7 +71,9 @@ func (handler *APIHandler) Init(mux *mux.Router) error {
 	// Setup routes
 	mux.Handle("/", handler.version()).Methods(http.MethodGet)
 	mux.Handle("/machines", handler.listMachines()).Methods(http.MethodGet)
-	mux.Handle("/machines", handler.createMachine()).Methods(http.MethodPost, http.MethodOptions)
+	mux.Handle("/machines", handler.createMachine()).Methods(http.MethodPost)
+	mux.Handle("/machines/{id}", handler.showMachineDetails()).Methods(http.MethodGet)
+	mux.Handle("/machines/{id}", handler.deleteMachine()).Methods(http.MethodDelete)
 	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods(http.MethodGet)
 	mux.Handle("/images", handler.listImages()).Methods(http.MethodGet)
 	mux.Handle("/networks", handler.listNetworks()).Methods(http.MethodGet)
@@ -87,6 +88,64 @@ func (handler *APIHandler) version() http.Handler {
 			Version: meta.Version,
 		})
 		w.Write(msg)
+	})
+}
+
+func (handler *APIHandler) deleteMachine() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		_, err := handler.Client.DeleteMachine(r.Context(), &api.DeleteMachineRequest{
+			Id: vars["id"],
+		})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("delete machine:", err)
+			return
+		}
+		fmt.Fprintln(w, "ok")
+	})
+}
+
+func (handler *APIHandler) showMachineDetails() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		resp, err := handler.Client.GetMachineDetails(r.Context(), &api.GetMachineDetailsRequest{
+			Id: vars["id"],
+		})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("machine details:", err)
+			return
+		}
+		type jsonNetworkInterface struct {
+			IPv4      string `json:"ipv4"`
+			IPv6      string `json:"ipv6"`
+			NetworkID string `json:"networkId"`
+		}
+		body := struct {
+			ID     string `json:"id"`
+			Name   string `json:"name"`
+			Status string `json:"status"`
+
+			ImageID           string                 `json:"imageId"`
+			SSHKeyIds         []string               `json:"sshKeyIds"`
+			NetworkInterfaces []jsonNetworkInterface `json:"networkInterfaces"`
+		}{
+			ID:                resp.Machine.Id,
+			Name:              resp.Machine.Name,
+			Status:            resp.Machine.Status.String(),
+			ImageID:           resp.Machine.ImageId,
+			SSHKeyIds:         resp.Machine.SshKeyIds,
+			NetworkInterfaces: make([]jsonNetworkInterface, len(resp.Machine.Networks)),
+		}
+		for i := range resp.Machine.Networks {
+			body.NetworkInterfaces[i] = jsonNetworkInterface{
+				IPv4:      resp.Machine.Networks[i].IpV4,
+				IPv6:      resp.Machine.Networks[i].IpV6,
+				NetworkID: resp.Machine.Networks[i].NetworkId,
+			}
+		}
+		json.NewEncoder(w).Encode(&body)
 	})
 }
 

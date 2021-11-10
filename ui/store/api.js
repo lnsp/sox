@@ -4,6 +4,7 @@ export const state = () => ({
   sshKeys: [],
   images: [],
   networks: [],
+  machineDetails: {},
 });
 
 export const mutations = {
@@ -13,6 +14,9 @@ export const mutations = {
   machines(state, machines) {
     state.machines = machines
   },
+  machineDetails(state, { id, details }) {
+    state.machineDetails[id] = details
+  },
   sshKeys(state, sshKeys) {
     state.sshKeys = sshKeys
   },
@@ -21,7 +25,7 @@ export const mutations = {
   },
   networks(state, networks) {
     state.networks = networks
-  }
+  },
 }
 
 export const actions = {
@@ -44,5 +48,9 @@ export const actions = {
   async networks({ commit }) {
     let response = await this.$axios.$get('/networks')
     commit('networks', response)
+  },
+  async machineDetails({ commit }, id) {
+    let response = await this.$axios.$get('/machines/' + id)
+    commit('machineDetails', response)
   }
 }

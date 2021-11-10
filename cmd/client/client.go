@@ -25,6 +25,8 @@ var rootCmd = cobra.Command{
 	Version: meta.Version,
 }
 
+var listIdsOnly bool
+
 var imagesCmd = cobra.Command{
 	Use:          "images",
 	Short:        "Manage machine images",
@@ -41,6 +43,12 @@ var imagesCmd = cobra.Command{
 		resp, err := client.ListImages(ctx, &api.ListImagesRequest{})
 		if err != nil {
 			return err
+		}
+		if listIdsOnly {
+			for i := range resp.Images {
+				fmt.Println(resp.Images[i].Id)
+			}
+			return nil
 		}
 		// print out ssh keys in table format
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
@@ -71,6 +79,12 @@ var sshKeysCmd = cobra.Command{
 		if err != nil {
 			return err
 		}
+		if listIdsOnly {
+			for i := range resp.Keys {
+				fmt.Println(resp.Keys[i].Id)
+			}
+			return nil
+		}
 		// print out ssh keys in table format
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
 		defer tw.Flush()
@@ -98,6 +112,12 @@ var machinesCmd = cobra.Command{
 		resp, err := client.ListMachines(ctx, &api.ListMachinesRequest{})
 		if err != nil {
 			return err
+		}
+		if listIdsOnly {
+			for i := range resp.Machines {
+				fmt.Println(resp.Machines[i].Id)
+			}
+			return nil
 		}
 		// print out machines in table format
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
@@ -223,6 +243,12 @@ var networksCmd = cobra.Command{
 		if err != nil {
 			return err
 		}
+		if listIdsOnly {
+			for i := range resp.Networks {
+				fmt.Println(resp.Networks[i].Id)
+			}
+			return nil
+		}
 		// print out machine details
 		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
 		defer tw.Flush()
@@ -244,9 +270,13 @@ func init() {
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", true, "Connect to insecure endpoint")
 	rootCmd.PersistentFlags().DurationVar(&timeout, "timeout", time.Minute, "Client connection timeout")
 	rootCmd.AddCommand(&imagesCmd)
+	imagesCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	rootCmd.AddCommand(&sshKeysCmd)
+	sshKeysCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	rootCmd.AddCommand(&machinesCmd)
+	machinesCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	rootCmd.AddCommand(&networksCmd)
+	networksCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	machinesCmd.AddCommand(&machinesCreateCmd)
 	machinesCmd.AddCommand(&machinesInspectCmd)
 	machinesCmd.AddCommand(&machinesDeleteCmd)

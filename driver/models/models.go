@@ -2,6 +2,16 @@ package models
 
 import "fmt"
 
+type MachineState int64
+
+const (
+	StateUnknown MachineState = iota
+	StateCreated
+	StateStopped
+	StateRunning
+	StateCrashed
+)
+
 type Machine struct {
 	ID   string `gorm:"primaryKey"`
 	Name string `gorm:"uniqueIndex"`

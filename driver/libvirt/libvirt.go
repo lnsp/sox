@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"text/template"
 
@@ -22,6 +23,9 @@ type Libvirt struct {
 	conn    *libvirt.Connect
 	network *libvirt.Network
 	storage *libvirt.StoragePool
+
+	stateCacheMu sync.Mutex
+	stateCache   map[string]models.MachineState
 }
 
 func New(uri string, network string, storagePool string) (*Libvirt, error) {
@@ -44,7 +48,12 @@ func New(uri string, network string, storagePool string) (*Libvirt, error) {
 	}
 	storageId, _ := storage.GetUUIDString()
 	log.Println("found storage pool", storageId)
-	return &Libvirt{conn, net, storage}, nil
+	return &Libvirt{
+		conn:       conn,
+		network:    net,
+		storage:    storage,
+		stateCache: make(map[string]models.MachineState),
+	}, nil
 }
 
 var networkIfaceTemplate = template.Must(template.New("network").Parse(`
@@ -297,6 +306,36 @@ func writeDisabledNetworkConfig() (string, error) {
 	defer netcfg.Close()
 	fmt.Fprintln(netcfg, "network: { config: disabled }")
 	return netcfg.Name(), nil
+}
+
+func (lv *Libvirt) GetMachineState(id string) (models.MachineState, error) {
+	lv.stateCacheMu.Lock()
+	defer lv.stateCacheMu.Unlock()
+	if state, ok := lv.stateCache[id]; ok {
+		return state, nil
+	}
+	// No entry found, unlock and get entry
+	dom, err := lv.conn.LookupDomainByUUIDString(id)
+	if err != nil {
+		return models.StateUnknown, fmt.Errorf("lookup domain: %w", err)
+	}
+	state, _, err := dom.GetState()
+	if err != nil {
+		return models.StateUnknown, fmt.Errorf("get domain state: %w", err)
+	}
+	var machineState models.MachineState
+	switch state {
+	case libvirt.DOMAIN_RUNNING:
+		machineState = models.StateRunning
+	case libvirt.DOMAIN_BLOCKED, libvirt.DOMAIN_CRASHED:
+		machineState = models.StateCrashed
+	case libvirt.DOMAIN_PAUSED, libvirt.DOMAIN_PMSUSPENDED, libvirt.DOMAIN_SHUTDOWN, libvirt.DOMAIN_SHUTOFF:
+		machineState = models.StateStopped
+	default:
+		machineState = models.StateUnknown
+	}
+	lv.stateCache[id] = machineState
+	return machineState, nil
 }
 
 func (lv *Libvirt) CreateMachine(machine *models.Machine) error {

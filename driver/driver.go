@@ -201,12 +201,17 @@ func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMac
 	for i := range machine.SSHKeys {
 		sshKeyIds[i] = machine.SSHKeys[i].ID
 	}
+	// Get state
+	state, err := driver.lv.GetMachineState(machine.ID)
+	if err != nil {
+		state = models.StateUnknown
+	}
 	// Put info into protobuf
 	return &api.GetMachineDetailsResponse{
 		Machine: &api.Machine{
 			Id:     machine.ID,
 			Name:   machine.Name,
-			Status: api.Machine_CREATED,
+			Status: machineStateToApiStatus(state),
 			Specs: &api.Machine_Specs{
 				Cpus:   machine.Specs.CPUs,
 				Memory: machine.Specs.Memory,
@@ -219,6 +224,21 @@ func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMac
 	}, nil
 }
 
+func machineStateToApiStatus(state models.MachineState) api.Machine_Status {
+	switch state {
+	case models.StateCreated:
+		return api.Machine_CREATED
+	case models.StateRunning:
+		return api.Machine_RUNNING
+	case models.StateCrashed:
+		return api.Machine_CRASHED
+	case models.StateStopped:
+		return api.Machine_STOPPED
+	default:
+		return api.Machine_STATUS_UNSPECIFIED
+	}
+}
+
 func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachinesRequest) (*api.ListMachinesResponse, error) {
 	machines := []models.Machine{}
 	if err := driver.db.Find(&machines).Error; err != nil {
@@ -226,10 +246,16 @@ func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachine
 	}
 	apiMachines := make([]*api.Machine, len(machines))
 	for i := range machines {
+		// get state
+		state, err := driver.lv.GetMachineState(machines[i].ID)
+		if err != nil {
+			log.Println("get machine state:", err)
+			state = models.StateUnknown
+		}
 		apiMachines[i] = &api.Machine{
 			Id:     machines[i].ID,
 			Name:   machines[i].Name,
-			Status: api.Machine_CREATED,
+			Status: machineStateToApiStatus(state),
 			Specs: &api.Machine_Specs{
 				Cpus:   machines[i].Specs.CPUs,
 				Memory: machines[i].Specs.Memory,
@@ -292,7 +318,7 @@ func initModels(db *gorm.DB) error {
 	// make sure debian image exists
 	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.Image{
 		ID:   "6274bb3f-56c4-4a94-895b-8e0675f12368",
-		Name: "debian/bullseye",
+		Name: "Debian 11",
 		OS:   api.Image_DEBIAN_BULLSEYE.String(),
 		Path: "/var/lib/libvirt/images/debian-11-generic-amd64.qcow2",
 	})

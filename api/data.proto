@@ -46,7 +46,7 @@ message Machine {
         CREATED = 1;
         STOPPED = 2;
         RUNNING = 3;
-        DESTROYED = 4;
+        CRASHED = 4;
     }
 }
 

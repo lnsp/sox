@@ -122,22 +122,29 @@ func (driver *Driver) ConfigureNetworkInterface(ctx context.Context, network mod
 }
 
 func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMachineRequest) (*api.CreateMachineResponse, error) {
-	// Retrieve SSH key and image
-	var sshKey models.SSHKey
-	if result := driver.db.Where("id = ? OR name = ?", request.SshKeyId, request.SshKeyId).First(&sshKey); result.Error != nil {
-		return nil, status.Errorf(codes.NotFound, "retrieve ssh key: %v", result.Error)
+	// Retrieve SSH keys
+	sshKeys := make([]models.SSHKey, len(request.SshKeyIds))
+	if len(request.SshKeyIds) < 1 {
+		return nil, status.Errorf(codes.InvalidArgument, "must contain at least one ssh key ID")
 	}
+	for i := range request.SshKeyIds {
+		if result := driver.db.Where("id = ?", request.SshKeyIds[i]).First(&sshKeys[i]); result.Error != nil {
+			return nil, status.Errorf(codes.NotFound, "retrieve ssh key: %v", result.Error)
+		}
+	}
+	// Retrieve image
 	var image models.Image
-	if result := driver.db.Where("id = ? OR name = ?", request.ImageId, request.ImageId).First(&image); result.Error != nil {
+	if result := driver.db.Where("id = ?", request.ImageId).First(&image); result.Error != nil {
 		return nil, status.Errorf(codes.NotFound, "retrieve image: %v", result.Error)
 	}
+	// Retrieve network interfaces
 	if len(request.NetworkIds) < 1 {
 		return nil, status.Errorf(codes.InvalidArgument, "must contain at least one network ID")
 	}
 	ifaces := make([]models.NetworkInterface, len(request.NetworkIds))
 	for i := range request.NetworkIds {
 		var network models.Network
-		if err := driver.db.Where("id = ? OR name = ?", request.NetworkIds[i], request.NetworkIds[i]).First(&network).Error; err != nil {
+		if err := driver.db.Where("id = ?", request.NetworkIds[i]).First(&network).Error; err != nil {
 			return nil, status.Errorf(codes.NotFound, "retrieve network: %v", err)
 		}
 		iface, err := driver.ConfigureNetworkInterface(ctx, network)
@@ -156,7 +163,7 @@ func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMach
 		ID:                uuid.New().String(),
 		Name:              request.Name,
 		Image:             image,
-		SSHKey:            sshKey,
+		SSHKeys:           sshKeys,
 		Specs:             specs,
 		NetworkInterfaces: ifaces,
 	}
@@ -177,10 +184,10 @@ func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMach
 func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMachineDetailsRequest) (*api.GetMachineDetailsResponse, error) {
 	// Use ID or name to find machine
 	var machine models.Machine
-	if err := driver.db.Preload("NetworkInterfaces").Where("id = ? OR name = ?", request.Id, request.Id).First(&machine).Error; err != nil {
+	if err := driver.db.Preload("SSHKeys").Preload("NetworkInterfaces").Where("id = ? OR name = ?", request.Id, request.Id).First(&machine).Error; err != nil {
 		return nil, status.Errorf(codes.Internal, "retrieve machine: %v", err)
 	}
-	// TODO(lnsp): Retrieve status data from libvirt
+	// TODO(lnsp): Retrieve status data from libvirt, maybe cache them
 	apiNetworkInterfaces := make([]*api.NetworkInterface, len(machine.NetworkInterfaces))
 	for i := range machine.NetworkInterfaces {
 		apiNetworkInterfaces[i] = &api.NetworkInterface{
@@ -188,6 +195,11 @@ func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMac
 			IpV4:      machine.NetworkInterfaces[i].IPv4,
 			IpV6:      machine.NetworkInterfaces[i].IPv6,
 		}
+	}
+	// Generate list of key ids
+	sshKeyIds := make([]string, len(machine.SSHKeys))
+	for i := range machine.SSHKeys {
+		sshKeyIds[i] = machine.SSHKeys[i].ID
 	}
 	// Put info into protobuf
 	return &api.GetMachineDetailsResponse{
@@ -200,9 +212,9 @@ func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMac
 				Memory: machine.Specs.Memory,
 				Disk:   machine.Specs.Disk,
 			},
-			ImageId:  machine.Image.ID,
-			SshKeyId: machine.SSHKey.ID,
-			Networks: apiNetworkInterfaces,
+			ImageId:   machine.Image.ID,
+			SshKeyIds: sshKeyIds,
+			Networks:  apiNetworkInterfaces,
 		},
 	}, nil
 }
@@ -223,8 +235,7 @@ func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachine
 				Memory: machines[i].Specs.Memory,
 				Disk:   machines[i].Specs.Disk,
 			},
-			ImageId:  machines[i].Image.ID,
-			SshKeyId: machines[i].SSHKey.ID,
+			ImageId: machines[i].Image.ID,
 		}
 	}
 	return &api.ListMachinesResponse{
@@ -235,7 +246,7 @@ func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachine
 func (driver *Driver) DeleteMachine(ctx context.Context, request *api.DeleteMachineRequest) (*api.DeleteMachineResponse, error) {
 	// Destroy machine instance
 	var machine models.Machine
-	if err := driver.db.Where("id = ? OR name = ?", request.Id, request.Id).First(&machine).Error; err != nil {
+	if err := driver.db.Where("id = ?", request.Id, request.Id).First(&machine).Error; err != nil {
 		return nil, status.Errorf(codes.NotFound, "retrieve machine: %v", err)
 	}
 	if err := driver.lv.DeleteMachine(&machine); err != nil {
@@ -274,7 +285,9 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 }
 
 func initModels(db *gorm.DB) error {
-	db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{})
+	if err := db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{}); err != nil {
+		return err
+	}
 
 	// make sure debian image exists
 	db.Clauses(clause.OnConflict{DoNothing: true}).Create(&models.Image{

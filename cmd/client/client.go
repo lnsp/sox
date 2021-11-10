@@ -149,7 +149,7 @@ var machinesCreateCpu int64
 var machinesCreateMemory int64
 var machinesCreateDisk int64
 var machinesCreateImage string
-var machinesCreateSSHKey string
+var machinesCreateSSHKeys []string
 var machinesCreateNetworks []string
 
 var machinesCreateCmd = cobra.Command{
@@ -173,7 +173,7 @@ var machinesCreateCmd = cobra.Command{
 				Disk:   machinesCreateDisk,
 			},
 			ImageId:    machinesCreateImage,
-			SshKeyId:   machinesCreateSSHKey,
+			SshKeyIds:  machinesCreateSSHKeys,
 			NetworkIds: machinesCreateNetworks,
 		})
 		if err != nil {
@@ -251,10 +251,10 @@ func init() {
 	machinesCmd.AddCommand(&machinesInspectCmd)
 	machinesCmd.AddCommand(&machinesDeleteCmd)
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateImage, "image", "i", "", "Operating system image")
-	machinesCreateCmd.Flags().StringVarP(&machinesCreateSSHKey, "ssh-key", "k", "", "SSH key for login")
+	machinesCreateCmd.Flags().StringArrayVarP(&machinesCreateSSHKeys, "ssh-keys", "k", nil, "SSH keys for login")
 	machinesCreateCmd.Flags().StringArrayVarP(&machinesCreateNetworks, "networks", "n", nil, "Network to connect to")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateCpu, "cpu", 2, "Number of vCPUs")
-	machinesCreateCmd.Flags().Int64Var(&machinesCreateDisk, "disk", 10000, "Disk size in MB")
+	machinesCreateCmd.Flags().Int64Var(&machinesCreateDisk, "disk", 10000, "Disk size in GB")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateMemory, "memory", 2000, "Memory size in MB")
 	machinesCreateCmd.MarkFlagRequired("image")
 	machinesCreateCmd.MarkFlagRequired("ssh-key")

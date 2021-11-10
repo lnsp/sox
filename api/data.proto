@@ -4,7 +4,6 @@ package virtm;
 
 option go_package = "github.com/valar/virtm/api;api";
 
-
 message SSHKey {
     string id = 1;
     string name = 2;
@@ -34,7 +33,7 @@ message Machine {
     repeated NetworkInterface networks = 5;
 
     string image_id = 6;
-    string ssh_key_id = 7;
+    repeated string ssh_key_ids = 7;
 
     message Specs {
         int64 cpus = 1;

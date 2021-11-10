@@ -1,6 +1,7 @@
 package libvirt
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -83,7 +84,9 @@ func configureImageNetworkInterface(machine *models.Machine, image string) error
 		}
 	}
 	// Use virt-customize to push config file into /etc/network/interfaces.d
-	if err := exec.Command("virt-customize", "-a", image, "--copy-in", netcfg.Name()+":/etc/network/interfaces.d").Run(); err != nil {
+	virtCustomizeCmd := exec.Command("virt-customize", "-a", image, "--copy-in", netcfg.Name()+":/etc/network/interfaces.d")
+	virtCustomizeCmd.Stderr = log.Writer()
+	if err := virtCustomizeCmd.Run(); err != nil {
 		return fmt.Errorf("copy netcfg to vm: %w", err)
 	}
 	log.Println("configured image network", netcfg.Name())
@@ -91,13 +94,17 @@ func configureImageNetworkInterface(machine *models.Machine, image string) error
 }
 
 func writeCloudConfig(machine *models.Machine) (string, error) {
+	// Generate authorized_keys file
+	authorizedKeys := bytes.NewBuffer(nil)
+	for _, key := range machine.SSHKeys {
+		fmt.Fprintln(authorizedKeys, key.Pubkey)
+	}
 	// Create cloud config
 	shortuuid := machine.ID[:8]
 	cc := cloudconfig.CloudConfig{
 		Hostname:       shortuuid,
 		FQDN:           shortuuid,
 		ManageEtcHosts: true,
-
 		Users: []cloudconfig.User{
 			{
 				Name:           "debian",
@@ -105,7 +112,7 @@ func writeCloudConfig(machine *models.Machine) (string, error) {
 				Home:           "/home/debian",
 				Shell:          "/bin/bash",
 				LockPasswd:     false,
-				AuthorizedKeys: machine.SSHKey.Pubkey,
+				AuthorizedKeys: authorizedKeys.String(),
 			},
 		},
 		Chpasswd: cloudconfig.Chpasswd{
@@ -296,7 +303,7 @@ func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	// Get source img path
 	configImagePath := filepath.Join(filepath.Dir(machine.Image.Path), machine.ID+"-config.img")
 	osImagePath := filepath.Join(filepath.Dir(machine.Image.Path), machine.ID+".qcow2")
-	osImageSize := fmt.Sprintf("%dM", machine.Specs.Disk)
+	osImageSize := fmt.Sprintf("%dG", machine.Specs.Disk)
 	// Create image snapshot
 	if err := exec.Command("qemu-img", "create", "-b", machine.Image.Path, "-f", "qcow2", "-F", "qcow2", osImagePath, osImageSize).Run(); err != nil {
 		return fmt.Errorf("create image snapshot: %w", err)

@@ -53,7 +53,8 @@ func main() {
 	}
 	// Setup CORS
 	if *dev {
-		server.Handler = handlers.CORS()(server.Handler)
+		allowedHeaders := []string{"Accept", "Accept-Language", "Content-Language", "Origin", "Content-Type"}
+		router.Use(handlers.CORS(handlers.AllowedHeaders(allowedHeaders)))
 	}
 	// Setup logging
 	server.Handler = handlers.LoggingHandler(os.Stdout, server.Handler)
@@ -69,11 +70,12 @@ type APIHandler struct {
 
 func (handler *APIHandler) Init(mux *mux.Router) error {
 	// Setup routes
-	mux.Handle("/", handler.version()).Methods("GET")
-	mux.Handle("/machines", handler.listMachines()).Methods("GET")
-	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods("GET")
-	mux.Handle("/images", handler.listImages()).Methods("GET")
-	mux.Handle("/networks", handler.listNetworks()).Methods("GET")
+	mux.Handle("/", handler.version()).Methods(http.MethodGet)
+	mux.Handle("/machines", handler.listMachines()).Methods(http.MethodGet)
+	mux.Handle("/machines", handler.createMachine()).Methods(http.MethodPost, http.MethodOptions)
+	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods(http.MethodGet)
+	mux.Handle("/images", handler.listImages()).Methods(http.MethodGet)
+	mux.Handle("/networks", handler.listNetworks()).Methods(http.MethodGet)
 	return nil
 }
 
@@ -187,6 +189,48 @@ func (handler *APIHandler) listNetworks() http.Handler {
 			}
 		}
 		json.NewEncoder(w).Encode(networks)
+	})
+}
+
+func (handler *APIHandler) createMachine() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var body struct {
+			Name  string `json:"name"`
+			Specs struct {
+				Cpus   int64 `json:"cpus"`
+				Memory int64 `json:"memory"`
+				Disk   int64 `json:"disk"`
+			} `json:"specs"`
+			Image    string   `json:"imageId"`
+			SSHKeys  []string `json:"sshKeyIds"`
+			Networks []string `json:"networkIds"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			http.Error(w, "could not decode body", http.StatusBadRequest)
+			log.Println("decode request body:", err)
+			return
+		}
+		resp, err := handler.Client.CreateMachine(r.Context(), &api.CreateMachineRequest{
+			Name: body.Name,
+			Specs: &api.Machine_Specs{
+				Cpus:   (body.Specs.Cpus),
+				Memory: (body.Specs.Memory),
+				Disk:   (body.Specs.Disk),
+			},
+			ImageId:    body.Image,
+			SshKeyIds:  body.SSHKeys,
+			NetworkIds: body.Networks,
+		})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("create machine:", err)
+			return
+		}
+		json.NewEncoder(w).Encode(struct {
+			Id string `json:"id"`
+		}{
+			resp.Id,
+		})
 	})
 }
 

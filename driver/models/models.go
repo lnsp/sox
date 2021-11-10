@@ -6,10 +6,10 @@ type Machine struct {
 	ID   string `gorm:"primaryKey"`
 	Name string `gorm:"uniqueIndex"`
 
-	ImageID  string
-	Image    Image
-	SSHKeyID string
-	SSHKey   SSHKey
+	ImageID string
+	Image   Image
+
+	SSHKeys []SSHKey `gorm:"many2many:machine_ssh_keys"`
 
 	Specs             Specs              `gorm:"embedded"`
 	NetworkInterfaces []NetworkInterface `gorm:"foreignkey:machine_id"`
@@ -20,12 +20,12 @@ type Specs struct {
 	CPUs int64
 	// Memory size in MB.
 	Memory int64
-	// Disk size in MB.
+	// Disk size in GB.
 	Disk int64
 }
 
 func (s Specs) String() string {
-	return fmt.Sprintf("%d vCPUs, %dMiB memory, %dMiB Disk Space", s.CPUs, s.Memory, s.Disk)
+	return fmt.Sprintf("%d vCPUs, %dMiB memory, %dGiB Disk Space", s.CPUs, s.Memory, s.Disk)
 }
 
 type Image struct {

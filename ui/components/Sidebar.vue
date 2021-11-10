@@ -130,7 +130,7 @@ export default {
   },
   data() {
     return {
-      collapsed: true,
+      collapsed: window.innerWidth < 1024,
     };
   },
   mounted() {

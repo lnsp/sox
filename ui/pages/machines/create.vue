@@ -4,7 +4,7 @@
       Create a new machine
     </headline>
     <divider light />
-    <div class="border border-red-500 text-red-500 rounded-lg flex items-center p-3 bg-white"
+    <div class="border border-red-500 text-red-500 rounded-lg flex items-center p-3 bg-white mb-6"
          v-if="error">
       <div>
         <svg xmlns="http://www.w3.org/2000/svg"
@@ -22,7 +22,7 @@
         {{ error }}
       </div>
     </div>
-    <form>
+    <form class="flex flex-col gap-6">
       <create-section-item :index=0
                            title="Choose a name"
                            :disabled="disabled(0)">
@@ -142,7 +142,7 @@
                 class="mt-2 bg-gray-700 font-medium flex items-center text-gray-100 px-8 py-3 rounded-lg shadow-lg hover:bg-gray-900">
           <span class="-ml-2 mr-3 text-gray-100">
             <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-5 w-5"
+                 class="h-5 w-5 animate-pulse"
                  fill="none"
                  viewBox="0 0 24 24"
                  stroke="currentColor"
@@ -193,9 +193,7 @@
 </template>
 
 <script>
-import CreateSectionItem from "../../components/CreateSectionItem.vue";
 export default {
-  components: { CreateSectionItem },
   computed: {
     images() {
       return this.$store.state.api.images;
@@ -232,8 +230,12 @@ export default {
   },
   methods: {
     async createMachine() {
-      if (this.id !== null) return;
+      if (this.id !== null) {
+        this.$router.push('/machines');
+        return
+      }
       this.creating = true;
+      this.error = null;
       try {
         let response = await this.$axios.$post("/machines", this.machine);
         this.id = response.id;
@@ -246,19 +248,21 @@ export default {
     disabled(stage) {
       switch (stage) {
         case 0:
-          return this.id !== null;
+          return this.creating || this.id !== null;
         case 1:
-          return this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
+          return this.creating || this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
         case 2:
-          return this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
+          return this.creating || this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
         case 3:
           return (
+            this.creating ||
             this.id !== null ||
             this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null ||
             this.imageId === ""
           );
         case 4:
           return (
+            this.creating ||
             this.id !== null ||
             this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null ||
             this.machine.imageId === "" ||

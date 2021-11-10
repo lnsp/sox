@@ -14,7 +14,7 @@
     <div class="max-w-xl">
       <div v-for="machine in machines"
            :key="machine.id"
-           class="flex p-3 items-center justify-between border mb-2 border-gray-200 bg-white rounded hover:border-gray-300"
+           class="flex p-3 items-center justify-between border mb-2 border-gray-200 bg-white rounded cursor-pointer hover:border-gray-300"
            @click="$router.push('/machines/' + machine.id)">
         <div class="relative px-2">
           <div class="absolute h-3 w-3 animate-ping rounded-full"

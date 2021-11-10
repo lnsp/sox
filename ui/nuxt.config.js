@@ -59,7 +59,7 @@ export default {
   // Google fonts configuration
   googleFonts: {
     families: {
-      Inter: [400, 500, 600],
+      Inter: [400, 500, 600, 700],
     }
   },
 }

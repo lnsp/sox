@@ -1,3 +1,5 @@
+import Vue from 'vue';
+
 export const state = () => ({
   version: '',
   machines: [],
@@ -15,7 +17,7 @@ export const mutations = {
     state.machines = machines
   },
   machineDetails(state, { id, details }) {
-    state.machineDetails[id] = details
+    Vue.set(state.machineDetails, id, details)
   },
   sshKeys(state, sshKeys) {
     state.sshKeys = sshKeys
@@ -50,7 +52,7 @@ export const actions = {
     commit('networks', response)
   },
   async machineDetails({ commit }, id) {
-    let response = await this.$axios.$get('/machines/' + id)
-    commit('machineDetails', response)
+    let details = await this.$axios.$get('/machines/' + id)
+    commit('machineDetails', { id, details })
   }
 }

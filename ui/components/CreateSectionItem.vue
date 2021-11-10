@@ -1,5 +1,5 @@
 <template>
-  <div class="my-4">
+  <div class="">
     <div class="flex items-center">
       <div class="w-8 text-center mr-4">
         <circled :disabled="disabled">

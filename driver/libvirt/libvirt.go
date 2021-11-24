@@ -8,7 +8,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	"text/template"
 
@@ -23,9 +22,6 @@ type Libvirt struct {
 	conn    *libvirt.Connect
 	network *libvirt.Network
 	storage *libvirt.StoragePool
-
-	stateCacheMu sync.Mutex
-	stateCache   map[string]models.MachineState
 }
 
 func New(uri string, network string, storagePool string) (*Libvirt, error) {
@@ -49,10 +45,9 @@ func New(uri string, network string, storagePool string) (*Libvirt, error) {
 	storageId, _ := storage.GetUUIDString()
 	log.Println("found storage pool", storageId)
 	return &Libvirt{
-		conn:       conn,
-		network:    net,
-		storage:    storage,
-		stateCache: make(map[string]models.MachineState),
+		conn:    conn,
+		network: net,
+		storage: storage,
 	}, nil
 }
 
@@ -282,11 +277,18 @@ func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {
 	if err != nil {
 		return fmt.Errorf("lookup domain: %w", err)
 	}
-	// Stop domain
-	if err := dom.Destroy(); err != nil {
-		return fmt.Errorf("destroy domain: %w", err)
+	// Stop domain if necessary
+	state, _, err := dom.GetState()
+	if err != nil {
+		return fmt.Errorf("get domain state: %w", err)
 	}
-	log.Println("destroyed libvirt domain", machine.ID)
+	if state == libvirt.DOMAIN_RUNNING {
+		// Stop domain
+		if err := dom.Destroy(); err != nil {
+			return fmt.Errorf("destroy domain: %w", err)
+		}
+		log.Println("destroyed libvirt domain", machine.ID)
+	}
 	// Undefine domain
 	if err := dom.Undefine(); err != nil {
 		return fmt.Errorf("undefine domain: %w", err)
@@ -309,11 +311,6 @@ func writeDisabledNetworkConfig() (string, error) {
 }
 
 func (lv *Libvirt) GetMachineState(id string) (models.MachineState, error) {
-	lv.stateCacheMu.Lock()
-	defer lv.stateCacheMu.Unlock()
-	if state, ok := lv.stateCache[id]; ok {
-		return state, nil
-	}
 	// No entry found, unlock and get entry
 	dom, err := lv.conn.LookupDomainByUUIDString(id)
 	if err != nil {
@@ -334,7 +331,6 @@ func (lv *Libvirt) GetMachineState(id string) (models.MachineState, error) {
 	default:
 		machineState = models.StateUnknown
 	}
-	lv.stateCache[id] = machineState
 	return machineState, nil
 }
 
@@ -379,4 +375,22 @@ func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	}
 	log.Println("created libvirt domain", machine.ID)
 	return nil
+}
+
+type StatRecord struct {
+	Value     float32
+	Timestamp int64
+}
+
+func (lv *Libvirt) CpuStats(id string) ([]StatRecord, error) {
+	dom, err := lv.conn.LookupDomainByUUIDString(id)
+	if err != nil {
+		return nil, fmt.Errorf("lookup domain: %w", err)
+	}
+	stats, err := dom.GetCPUStats(-1, 0, 0)
+	if err != nil {
+		return nil, fmt.Errorf("get cpu stats: %w", err)
+	}
+	_ = stats
+	return nil, nil
 }

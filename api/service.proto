@@ -12,12 +12,13 @@ service VirtM {
     rpc GetMachineDetails(GetMachineDetailsRequest) returns (GetMachineDetailsResponse);
     rpc DeleteMachine(DeleteMachineRequest) returns (DeleteMachineResponse);
 
+    rpc TriggerMachine(TriggerMachineRequest) returns (TriggerMachineResponse);
+
     rpc CreateSSHKey(CreateSSHKeyRequest) returns (CreateSSHKeyResponse);
     rpc ListSSHKeys(ListSSHKeysRequest) returns (ListSSHKeysResponse);
     rpc DeleteSSHKey(DeleteSSHKeyRequest) returns (DeleteSSHKeyResponse);
 
     rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
-
     rpc ListNetworks(ListNetworksRequest) returns (ListNetworksResponse);
 }
 
@@ -87,4 +88,20 @@ message ListNetworksRequest {}
 
 message ListNetworksResponse {
     repeated Network networks = 1;
+}
+
+message TriggerMachineRequest {
+    string id = 1;
+    Event event = 2;
+
+    enum Event {
+        EVENT_UNKNOWN = 0;
+        POWERON = 1;
+        POWEROFF = 2;
+        REBOOT = 3;
+    }
+}
+
+message TriggerMachineResponse {
+    Machine.Status status = 1;
 }

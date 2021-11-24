@@ -1,4 +1,4 @@
-# <img src="docs/logo.png" alt="VirtM" height="40">
+# VirtM
 
 Experimental self-hosted virtual machine manager. Work in progress.
 

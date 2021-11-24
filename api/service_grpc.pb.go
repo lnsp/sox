@@ -22,6 +22,7 @@ type VirtMClient interface {
 	ListMachines(ctx context.Context, in *ListMachinesRequest, opts ...grpc.CallOption) (*ListMachinesResponse, error)
 	GetMachineDetails(ctx context.Context, in *GetMachineDetailsRequest, opts ...grpc.CallOption) (*GetMachineDetailsResponse, error)
 	DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error)
+	TriggerMachine(ctx context.Context, in *TriggerMachineRequest, opts ...grpc.CallOption) (*TriggerMachineResponse, error)
 	CreateSSHKey(ctx context.Context, in *CreateSSHKeyRequest, opts ...grpc.CallOption) (*CreateSSHKeyResponse, error)
 	ListSSHKeys(ctx context.Context, in *ListSSHKeysRequest, opts ...grpc.CallOption) (*ListSSHKeysResponse, error)
 	DeleteSSHKey(ctx context.Context, in *DeleteSSHKeyRequest, opts ...grpc.CallOption) (*DeleteSSHKeyResponse, error)
@@ -67,6 +68,15 @@ func (c *virtMClient) GetMachineDetails(ctx context.Context, in *GetMachineDetai
 func (c *virtMClient) DeleteMachine(ctx context.Context, in *DeleteMachineRequest, opts ...grpc.CallOption) (*DeleteMachineResponse, error) {
 	out := new(DeleteMachineResponse)
 	err := c.cc.Invoke(ctx, "/virtm.VirtM/DeleteMachine", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *virtMClient) TriggerMachine(ctx context.Context, in *TriggerMachineRequest, opts ...grpc.CallOption) (*TriggerMachineResponse, error) {
+	out := new(TriggerMachineResponse)
+	err := c.cc.Invoke(ctx, "/virtm.VirtM/TriggerMachine", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -126,6 +136,7 @@ type VirtMServer interface {
 	ListMachines(context.Context, *ListMachinesRequest) (*ListMachinesResponse, error)
 	GetMachineDetails(context.Context, *GetMachineDetailsRequest) (*GetMachineDetailsResponse, error)
 	DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error)
+	TriggerMachine(context.Context, *TriggerMachineRequest) (*TriggerMachineResponse, error)
 	CreateSSHKey(context.Context, *CreateSSHKeyRequest) (*CreateSSHKeyResponse, error)
 	ListSSHKeys(context.Context, *ListSSHKeysRequest) (*ListSSHKeysResponse, error)
 	DeleteSSHKey(context.Context, *DeleteSSHKeyRequest) (*DeleteSSHKeyResponse, error)
@@ -149,6 +160,9 @@ func (UnimplementedVirtMServer) GetMachineDetails(context.Context, *GetMachineDe
 }
 func (UnimplementedVirtMServer) DeleteMachine(context.Context, *DeleteMachineRequest) (*DeleteMachineResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteMachine not implemented")
+}
+func (UnimplementedVirtMServer) TriggerMachine(context.Context, *TriggerMachineRequest) (*TriggerMachineResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method TriggerMachine not implemented")
 }
 func (UnimplementedVirtMServer) CreateSSHKey(context.Context, *CreateSSHKeyRequest) (*CreateSSHKeyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateSSHKey not implemented")
@@ -246,6 +260,24 @@ func _VirtM_DeleteMachine_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(VirtMServer).DeleteMachine(ctx, req.(*DeleteMachineRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _VirtM_TriggerMachine_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TriggerMachineRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(VirtMServer).TriggerMachine(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/virtm.VirtM/TriggerMachine",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(VirtMServer).TriggerMachine(ctx, req.(*TriggerMachineRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -362,6 +394,10 @@ var VirtM_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "DeleteMachine",
 			Handler:    _VirtM_DeleteMachine_Handler,
+		},
+		{
+			MethodName: "TriggerMachine",
+			Handler:    _VirtM_TriggerMachine_Handler,
 		},
 		{
 			MethodName: "CreateSSHKey",

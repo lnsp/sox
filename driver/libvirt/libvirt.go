@@ -298,6 +298,42 @@ func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {
 	return nil
 }
 
+// RebootMachine reboots an active machine.
+func (lv *Libvirt) RebootMachine(machine *models.Machine) error {
+	dom, err := lv.conn.LookupDomainByUUIDString(machine.ID)
+	if err != nil {
+		return fmt.Errorf("lookup domain: %w", err)
+	}
+	if err := dom.Reboot(libvirt.DOMAIN_REBOOT_DEFAULT); err != nil {
+		return fmt.Errorf("reboot domain: %w", err)
+	}
+	return nil
+}
+
+// StopMachines stops an active machine.
+func (lv *Libvirt) StopMachine(machine *models.Machine) error {
+	dom, err := lv.conn.LookupDomainByUUIDString(machine.ID)
+	if err != nil {
+		return fmt.Errorf("lookup domain: %w", err)
+	}
+	if err := dom.Destroy(); err != nil {
+		return fmt.Errorf("destroy domain: %w", err)
+	}
+	return nil
+}
+
+// StartMachine starts a new machine.
+func (lv *Libvirt) StartMachine(machine *models.Machine) error {
+	dom, err := lv.conn.LookupDomainByUUIDString(machine.ID)
+	if err != nil {
+		return fmt.Errorf("lookup domain: %w", err)
+	}
+	if err := dom.Create(); err != nil {
+		return fmt.Errorf("create domain: %w", err)
+	}
+	return nil
+}
+
 // writeDisabledNetworkConfig creates a basic network config that disabled cloud-init networking setup.
 func writeDisabledNetworkConfig() (string, error) {
 	// Create basic network config

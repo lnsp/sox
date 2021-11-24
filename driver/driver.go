@@ -181,6 +181,43 @@ func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMach
 	}, nil
 }
 
+func (driver *Driver) TriggerMachine(ctx context.Context, request *api.TriggerMachineRequest) (*api.TriggerMachineResponse, error) {
+	// Find target machine
+	var machine models.Machine
+	if err := driver.db.Where("id = ?", request.Id).First(&machine).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "retrieve machine: %v", err)
+	}
+	// Trigger machine event
+	switch request.Event {
+	case api.TriggerMachineRequest_EVENT_UNKNOWN:
+		return nil, status.Errorf(codes.InvalidArgument, "unknown machine trigger event")
+	case api.TriggerMachineRequest_POWERON:
+		// Power on machine
+		if err := driver.lv.StartMachine(&machine); err != nil {
+			return nil, status.Errorf(codes.Internal, "start machine: %v", err)
+		}
+	case api.TriggerMachineRequest_POWEROFF:
+		// Power off machine
+		if err := driver.lv.StopMachine(&machine); err != nil {
+			return nil, status.Errorf(codes.Internal, "stop machine: %v", err)
+		}
+	case api.TriggerMachineRequest_REBOOT:
+		if err := driver.lv.RebootMachine(&machine); err != nil {
+			return nil, status.Errorf(codes.Internal, "reboot machine: %v", err)
+		}
+	default:
+		return nil, status.Errorf(codes.InvalidArgument, "machine trigger event can not be handled")
+	}
+	// Read machine state
+	state, err := driver.lv.GetMachineState(machine.ID)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "get machine state after trigger: %v", err)
+	}
+	return &api.TriggerMachineResponse{
+		Status: machineStateToApiStatus(state),
+	}, nil
+}
+
 func (driver *Driver) GetMachineDetails(ctx context.Context, request *api.GetMachineDetailsRequest) (*api.GetMachineDetailsResponse, error) {
 	// Use ID or name to find machine
 	var machine models.Machine

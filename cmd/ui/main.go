@@ -74,6 +74,7 @@ func (handler *APIHandler) Init(mux *mux.Router) error {
 	mux.Handle("/machines", handler.createMachine()).Methods(http.MethodPost)
 	mux.Handle("/machines/{id}", handler.showMachineDetails()).Methods(http.MethodGet)
 	mux.Handle("/machines/{id}", handler.deleteMachine()).Methods(http.MethodDelete)
+	mux.Handle("/machines/{id}/trigger", handler.triggerMachine()).Methods(http.MethodPost).Queries("event", "{event}")
 	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods(http.MethodGet)
 	mux.Handle("/images", handler.listImages()).Methods(http.MethodGet)
 	mux.Handle("/networks", handler.listNetworks()).Methods(http.MethodGet)
@@ -289,6 +290,28 @@ func (handler *APIHandler) createMachine() http.Handler {
 			Id string `json:"id"`
 		}{
 			resp.Id,
+		})
+	})
+}
+
+func (handler *APIHandler) triggerMachine() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		vars := mux.Vars(r)
+		id := vars["id"]
+		evt := api.TriggerMachineRequest_Event(api.TriggerMachineRequest_Event_value[vars["event"]])
+		resp, err := handler.Client.TriggerMachine(r.Context(), &api.TriggerMachineRequest{
+			Id:    id,
+			Event: evt,
+		})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("trigger machine event:", err)
+			return
+		}
+		json.NewEncoder(w).Encode(struct {
+			Status string `json:"status"`
+		}{
+			Status: resp.Status.String(),
 		})
 	})
 }

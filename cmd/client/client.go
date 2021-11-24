@@ -226,6 +226,81 @@ var machinesDeleteCmd = cobra.Command{
 	},
 }
 
+var machinesStartCmd = cobra.Command{
+	Use:   "start [id]",
+	Short: "Boot a powered-off machine",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// submit request
+		resp, err := client.TriggerMachine(ctx, &api.TriggerMachineRequest{
+			Id:    args[0],
+			Event: api.TriggerMachineRequest_POWERON,
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Println(resp.Status)
+		return nil
+	},
+}
+
+var machinesStopCmd = cobra.Command{
+	Use:   "stop [id]",
+	Short: "Power off a running machine",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// submit request
+		resp, err := client.TriggerMachine(ctx, &api.TriggerMachineRequest{
+			Id:    args[0],
+			Event: api.TriggerMachineRequest_POWEROFF,
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Println(resp.Status)
+		return nil
+	},
+}
+
+var machinesRebootCmd = cobra.Command{
+	Use:   "reboot [id]",
+	Short: "Reboot a running machine",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// submit request
+		resp, err := client.TriggerMachine(ctx, &api.TriggerMachineRequest{
+			Id:    args[0],
+			Event: api.TriggerMachineRequest_REBOOT,
+		})
+		if err != nil {
+			return err
+		}
+		fmt.Println(resp.Status)
+		return nil
+	},
+}
+
 var networksCmd = cobra.Command{
 	Use:          "networks",
 	Short:        "Manage virtual networks",
@@ -280,6 +355,9 @@ func init() {
 	machinesCmd.AddCommand(&machinesCreateCmd)
 	machinesCmd.AddCommand(&machinesInspectCmd)
 	machinesCmd.AddCommand(&machinesDeleteCmd)
+	machinesCmd.AddCommand(&machinesStartCmd)
+	machinesCmd.AddCommand(&machinesStopCmd)
+	machinesCmd.AddCommand(&machinesRebootCmd)
 	machinesCreateCmd.Flags().StringVarP(&machinesCreateImage, "image", "i", "", "Operating system image")
 	machinesCreateCmd.Flags().StringArrayVarP(&machinesCreateSSHKeys, "ssh-keys", "k", nil, "SSH keys for login")
 	machinesCreateCmd.Flags().StringArrayVarP(&machinesCreateNetworks, "networks", "n", nil, "Network to connect to")

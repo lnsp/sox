@@ -1,12 +1,11 @@
 <template>
-  <div class="min-h-screen bg-groy-900 max-w-xs flex flex-col justify-between border-r-2 border-groy-700"
-       :class="{ 'w-1/2': !collapsed, 'min-w-xs': !collapsed }">
+  <div class="h-full bg-groy-900 max-w-xs flex-shrink-0 flex flex-col justify-between border-r-2 border-groy-700">
     <div>
       <div class="px-6 py-8 text-xl text-gray-100 font-normal flex items-center">
         <svg viewBox="0 0 300 300"
              version="1.1"
              xmlns="http://www.w3.org/2000/svg"
-             class="text-oxide-700 fill-current w-12 h-12"
+             class="text-oxide-400 fill-current w-8 h-8 sm:w-12 sm:h-12"
              style="fill-rule:evenodd;clip-rule:evenodd;stroke-linejoin:round;stroke-miterlimit:2;">
           <g id="Layer1">
             <path d="M219.986,239.429C200.751,255.275 176.107,264.797 149.257,264.797C87.788,264.797 37.882,214.891 37.882,153.422C37.882,91.952 87.788,42.046 149.257,42.046C210.727,42.046 260.633,91.952 260.633,153.422C260.633,178.194 252.528,201.088 238.819,219.585L224.545,205.286C234.741,190.549 240.705,172.676 240.705,153.422C240.705,102.95 199.729,61.974 149.257,61.974C98.786,61.974 57.81,102.95 57.81,153.422C57.81,203.893 98.786,244.869 149.257,244.869C170.607,244.869 190.257,237.537 205.814,225.232L219.986,239.429Z" />
@@ -88,7 +87,7 @@
       </nav>
     </div>
     <div class="p-4">
-      <button class="border border-transparent hover:border-oxide-400 rounded hover:text-oxide-400 text-gray-400 px-5 py-2 inline-block" @click="collapsed = !collapsed">
+      <button class="border border-transparent hover:border-oxide-400 rounded hover:text-oxide-400 text-gray-400 px-3 sm:px-5 h-12 inline-block" @click="collapsed = !collapsed">
         <template v-if="collapsed">
           <svg xmlns="http://www.w3.org/2000/svg"
                class="h-5"

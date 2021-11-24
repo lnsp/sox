@@ -18,42 +18,6 @@
         / New
       </h1>
     </div>
-    <div class="border border-rod-400 text-rod-400 bg-rod-900 rounded p-5 mb-4"
-         v-if="error">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center">
-          <div class="inline-block rounded-full text-groy-900 bg-rod-400 p-1">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-3 w-3"
-                 fill="none"
-                 viewBox="0 0 24 24"
-                 stroke="currentColor">
-              <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <span class="ml-3 font-bold">Error</span>
-        </div>
-        <button class=""
-                @click="error = null">
-          <svg xmlns="http://www.w3.org/2000/svg"
-               class="h-5"
-               fill="none"
-               viewBox="0 0 24 24"
-               stroke="currentColor">
-            <path stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        </button>
-      </div>
-      <div class="ml-8 mt-2">
-        {{ error }}
-      </div>
-    </div>
     <form class="flex flex-col gap-6">
       <create-section-item :index=0
                            title="Choose a name"
@@ -240,7 +204,6 @@ export default {
         networkIds: [],
         sshKeyIds: [],
       },
-      error: null,
       creating: null,
       id: null,
     };
@@ -257,12 +220,11 @@ export default {
         return;
       }
       this.creating = true;
-      this.error = null;
       try {
         let response = await this.$axios.$post("/machines", this.machine);
         this.id = response.id;
       } catch (err) {
-        this.error = err.response.data;
+        this.$store.commit('local/error', err)
       } finally {
         this.creating = false;
       }

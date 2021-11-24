@@ -3,7 +3,7 @@
              custom
              :to="to">
     <div :set="active = matches(isActive, isExactActive, route)">
-      <a class="rounded-sm flex items-center px-5 py-2 my-2 group border border-transparent hover:border-oxide-700 cursor-pointer"
+      <a class="rounded-sm flex items-center sm:px-5 px-3 h-12 my-2 group border border-transparent hover:border-oxide-700 cursor-pointer"
          @click="navigate"
          :href="route.fullPath"
          :class="[active ? ['bg-oxide-900'] : []]">

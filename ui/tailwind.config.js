@@ -1,11 +1,12 @@
 module.exports = {
   theme: {
     fontFamily: {
-      'mono': ['IBM Plex Mono', 'ui-monospace']
+      'sans': ['Inter'],
+      'mono': ['IBM Plex Mono'],
     },
     extend: {
       colors: {
-        'groy-900': '#020303',
+        'groy-900': '#080E11',
         'groy-700': '#1B2124',
         'groy-600': '#232B2F',
         'groy-500': '#2E393E',

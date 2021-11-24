@@ -69,7 +69,6 @@ export default {
   },
   methods: {
     statusColor(status) {
-      status = "RUNNING";
       return {
         STATUS_UNSPECIFIED: "bg-gray-300",
         CREATED: "bg-yellow-500",

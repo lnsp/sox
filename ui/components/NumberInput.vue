@@ -25,7 +25,7 @@
         <button @click.prevent="set(value - step)"
                 :disabled="value <= min"
                 class="h-1/2 w-full flex justify-center items-center focus:outline-none border border-transparent"
-                :class="value <= min ? ['cursor-not-allowed', 'text-gray-700'] : ['cursor-pointer','text-gray-400', 'hover:text-oxide-400', 'foxus:border-oxide-700' ]">
+                :class="value <= min ? ['cursor-not-allowed', 'text-gray-700'] : ['cursor-pointer','text-gray-400', 'hover:text-oxide-400', 'focus:border-oxide-700' ]">
           <svg xmlns="http://www.w3.org/2000/svg"
                class="w-4 transform rotate-180"
                fill="none"

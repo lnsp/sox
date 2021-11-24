@@ -51,8 +51,8 @@
             <machine-nav-item :to="'/machines/' + details.id + '/management'">Management</machine-nav-item>
           </div>
         </div>
-        <div class="flex-grow p-8 max-h-full overflow-scroll-x">
-          <NuxtChild />
+        <div class="flex-grow p-8 overflow-y-scroll">
+          <NuxtChild class="h-0" />
         </div>
       </div>
     </div>

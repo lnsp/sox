@@ -1,5 +1,5 @@
 <template>
-  <div class="">
+  <div class="" :class="[disabled ? 'opacity-25' : 'opacity-100']">
     <div class="flex items-center">
       <div class="w-8 text-center mr-4">
         <circled :disabled="disabled">
@@ -7,12 +7,12 @@
         </circled>
       </div>
       <div>
-        <headline h2 :disabled="disabled">
+        <h2 :disabled="disabled">
           {{ title }}
-        </headline>
+        </h2>
       </div>
     </div>
-    <div class="ml-12 mt-4" v-if="!disabled">
+    <div class="ml-12 mt-4">
       <slot />
     </div>
   </div>

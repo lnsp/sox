@@ -3,17 +3,17 @@
              custom
              :to="to">
     <div :set="active = matches(isActive, isExactActive, route)">
-      <a class="rounded-lg flex items-center px-5 py-3 my-2 group hover:bg-gray-800 cursor-pointer"
+      <a class="rounded-sm flex items-center px-5 py-2 my-2 group border border-transparent hover:border-oxide-700 cursor-pointer"
          @click="navigate"
          :href="route.fullPath"
-         :class="[active ? ['bg-gray-700'] : ['bg-gray-900']]">
-        <div class="group-hover:text-gray-100 link-icon"
-             :class="[active ? ['text-gray-100'] : ['text-gray-400']]">
+         :class="[active ? ['bg-oxide-900'] : []]">
+        <div class="link-icon h-5"
+             :class="[active ? ['text-oxide-400'] : ['text-gray-400']]">
           <slot></slot>
         </div>
         <div v-if="!collapsed"
-             class="link-text ml-3 group-hover:text-gray-100"
-             :class="[active ? ['text-gray-100'] : ['text-gray-400']]">{{ name }}</div>
+             class="link-text ml-3"
+             :class="[active ? ['text-oxide-400'] : ['text-gray-400']]">{{ name }}</div>
       </a>
     </div>
   </nuxt-link>

@@ -1,5 +1,5 @@
 <template>
-  <span :class="[color]" class="text-lg inline-block w-8 h-8 text-gray-100 flex items-center justify-center font-bold rounded-full">
+  <span :class="[color]" class="inline-block w-8 h-8 text-gray-100 flex items-center justify-center font-mono border">
     <slot />
   </span>
 </template>
@@ -11,8 +11,8 @@ export default {
   },
   computed: {
     color() {
-      if (this.disabled) return 'bg-gray-500';
-      else return 'bg-gray-700';
+      if (this.disabled) return ['border-oxide-900', 'text-oxide-900'];
+      else return ['border-oxide-700', 'text-oxide-400'];
     }
   }
 }

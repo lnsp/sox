@@ -1,5 +1,5 @@
 <template>
-  <div class="w-full border my-4" :class="[light ? ['border-gray-200'] : ['border-gray-700']]">
+  <div class="w-full border my-4" :class="[light ? ['border-groy-600'] : ['border-groy-700']]">
   </div>
 </template>
 

@@ -1,24 +1,56 @@
 <template>
   <div class="relative">
-    <headline h1>
-      Create a new machine
-    </headline>
-    <divider light />
-    <div class="border border-red-500 text-red-500 rounded-lg flex items-center p-3 bg-white mb-6"
-         v-if="error">
-      <div>
-        <svg xmlns="http://www.w3.org/2000/svg"
-             class="h-6 w-6"
-             fill="none"
-             viewBox="0 0 24 24"
-             stroke="currentColor">
-          <path stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    <div class="h-10 flex max-w-xl items-center text-gray-400 mb-4">
+      <NuxtLink to="/machines"
+                class="flex justify-center items-center group hover:text-oxide-700 border-b border-transparent hover:border-oxide-700">
+        <svg viewBox="0 0 10 11"
+             class="h-3 mr-4"
+             style="fill: currentColor">
+          <g transform="matrix(-0.000438321,-0.925173,1,-0.000473772,-155.809,482.889)">
+            <path d="M516.305,156.035L521.86,165.665L510.749,165.665L516.305,156.035Z" />
+          </g>
         </svg>
+        <h1 class="font-mono uppercase">
+          Machines
+        </h1>
+      </NuxtLink>
+      <h1 class="ml-3 font-mono uppercase">
+        / New
+      </h1>
+    </div>
+    <div class="border border-rod-400 text-rod-400 bg-rod-900 rounded p-5 mb-4"
+         v-if="error">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="inline-block rounded-full text-groy-900 bg-rod-400 p-1">
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="h-3 w-3"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor">
+              <path stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
+          <span class="ml-3 font-bold">Error</span>
+        </div>
+        <button class=""
+                @click="error = null">
+          <svg xmlns="http://www.w3.org/2000/svg"
+               class="h-5"
+               fill="none"
+               viewBox="0 0 24 24"
+               stroke="currentColor">
+            <path stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
       </div>
-      <div class="ml-3">
+      <div class="ml-8 mt-2">
         {{ error }}
       </div>
     </div>
@@ -27,16 +59,16 @@
                            title="Choose a name"
                            :disabled="disabled(0)">
         <text-input v-model="machine.name" />
-        <div class="text-sm mt-2 text-red-900"
+        <div class="text-sm mt-2 text-red-500 font-mono"
              v-if="machine.name.match(/^[a-zA-Z0-9]+$/g) === null">
           Name must match
-          <pre class="inline text-xs bg-gray-200 p-1">/^[a-zA-Z0-9]+$/g</pre>.
+          <pre class="inline text-xs p-1">/^[a-zA-Z0-9]+$/g</pre>
         </div>
       </create-section-item>
       <create-section-item :index=1
                            title="Choose the machine size"
                            :disabled="disabled(1)">
-        <div class="flex gap-6">
+        <div class="flex gap-6 max-w-lg">
           <form-group>
             <form-label>cpus (cores)</form-label>
             <number-input v-model="machine.specs.cpus"
@@ -63,12 +95,12 @@
           <div v-for="image in images"
                :key="image.id"
                @click="machine.imageId = image.id"
-               class="flex p-3 items-center justify-between border mb-2 border-gray-200 bg-white rounded hover:border-gray-300">
-            <div class="text-gray-700">
+               class="flex px-3 h-16 items-center justify-between border mb-2 border-groy-500 bg-groy-900 rounded hover:border-oxide-700">
+            <div :class="[ machine.imageId === image.id ? ['text-oxide-400'] : 'text-gray-300']">
               <system-icon :system="image.system" />
             </div>
             <div class="flex-grow px-2">
-              <div class="text-gray-900 font-medium">{{ image.name }}</div>
+              <div class="text-gray-300 font-mono">{{ image.name }}</div>
             </div>
             <div v-if="machine.imageId === image.id">
               <svg xmlns="http://www.w3.org/2000/svg"
@@ -91,10 +123,10 @@
         <div v-for="network in networks"
              :key="network.id"
              @click="toggleNetwork(network.id)"
-             class="flex p-3 max-w-lg items-center justify-between border mb-2 border-gray-200 bg-white rounded hover:border-gray-300">
+             class="flex px-3 h-16 max-w-lg items-center justify-between border mb-2 border-groy-500 rounded hover:border-oxide-700">
           <div class="flex-grow px-2">
-            <div class="text-gray-900 font-medium">{{ network.name }}</div>
-            <div class="text-xs text-gray-700 font-mono">{{ network.ipv4 }}</div>
+            <div class="text-gray-300">{{ network.name }}</div>
+            <div class="text-xs text-gray-500 font-mono">{{ network.ipv4 }}</div>
           </div>
           <div v-if="machine.networkIds.includes(network.id)">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -116,10 +148,10 @@
         <div v-for="key in sshKeys"
              :key="key.id"
              @click="toggleSSHKey(key.id)"
-             class="flex p-3 max-w-lg items-center justify-between border mb-2 border-gray-200 bg-white rounded hover:border-gray-300">
+             class="flex px-3 h-16 max-w-lg items-center justify-between border mb-2 border-groy-500 rounded hover:border-oxide-700">
           <div class="flex-grow px-2">
-            <div class="text-gray-900 font-medium">{{ key.name }}</div>
-            <div class="text-xs text-gray-700 font-mono">{{ key.fingerprint }}</div>
+            <div class="text-gray-300">{{ key.name }}</div>
+            <div class="text-xs text-gray-500 font-mono">{{ key.fingerprint }}</div>
           </div>
           <div v-if="machine.sshKeyIds.includes(key.id)">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -139,19 +171,11 @@
                            title="Verify settings and confirm"
                            :disabled="disabled(5)">
         <button @click.prevent="createMachine"
-                class="mt-2 bg-gray-700 font-medium flex items-center text-gray-100 px-8 py-3 rounded-lg shadow-lg hover:bg-gray-900">
-          <span class="-ml-2 mr-3 text-gray-100">
-            <svg xmlns="http://www.w3.org/2000/svg"
-                 class="h-5 w-5 animate-pulse"
-                 fill="none"
-                 viewBox="0 0 24 24"
-                 stroke="currentColor"
-                 v-if="!creating && !id">
-              <path stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M14 5l7 7m0 0l-7 7m7-7H3" />
-            </svg>
+                class="mt-2 font-mono flex items-center text-oxide-400 border-b border-transparent hover:border-oxide-400">
+          <span class="mr-3">
+            <span v-if="!creating && !id">
+              >
+            </span>
             <svg class="animate-spin h-5 w-5"
                  xmlns="http://www.w3.org/2000/svg"
                  fill="none"
@@ -178,9 +202,7 @@
                     stroke-width="2"
                     d="M5 13l4 4L19 7" />
             </svg>
-
           </span>
-
           <transition name="fade">
             <span v-if="!creating && !id">Looks good!</span>
             <span v-if="creating">Creating machine</span>
@@ -218,8 +240,8 @@ export default {
         networkIds: [],
         sshKeyIds: [],
       },
-      error: "",
-      creating: false,
+      error: null,
+      creating: null,
       id: null,
     };
   },
@@ -231,8 +253,8 @@ export default {
   methods: {
     async createMachine() {
       if (this.id !== null) {
-        this.$router.push('/machines');
-        return
+        this.$router.push("/machines");
+        return;
       }
       this.creating = true;
       this.error = null;
@@ -250,9 +272,17 @@ export default {
         case 0:
           return this.creating || this.id !== null;
         case 1:
-          return this.creating || this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
+          return (
+            this.creating ||
+            this.id !== null ||
+            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null
+          );
         case 2:
-          return this.creating || this.id !== null || this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null;
+          return (
+            this.creating ||
+            this.id !== null ||
+            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null
+          );
         case 3:
           return (
             this.creating ||

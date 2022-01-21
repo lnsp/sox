@@ -13,6 +13,7 @@ import (
 	"github.com/valar/virtm/driver/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/timestamppb"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
@@ -23,6 +24,34 @@ type Driver struct {
 
 	db *gorm.DB
 	lv *libvirt.Libvirt
+}
+
+func (driver *Driver) recordActivity(activityType api.Activity_Type, subject string) error {
+	if result := driver.db.Create(&models.Activity{
+		Type:    activityType.String(),
+		Subject: subject,
+	}); result.Error != nil {
+		return fmt.Errorf("record activity: %w", result.Error)
+	}
+	return nil
+}
+
+func (driver *Driver) ListActivities(ctx context.Context, request *api.ListActivitiesRequest) (*api.ListActivitiesResponse, error) {
+	activities := []models.Activity{}
+	if result := driver.db.Find(&activities); result.Error != nil {
+		return nil, status.Errorf(codes.Internal, "retrieve activities: %v", result.Error)
+	}
+	apiActivities := make([]*api.Activity, len(activities))
+	for i := range activities {
+		apiActivities[i] = &api.Activity{
+			Type:      api.Activity_Type(api.Activity_Type_value[activities[i].Type]),
+			Timestamp: timestamppb.New(activities[i].CreatedAt),
+			Subject:   activities[i].Subject,
+		}
+	}
+	return &api.ListActivitiesResponse{
+		Activities: apiActivities,
+	}, nil
 }
 
 func (driver *Driver) ListSSHKeys(ctx context.Context, request *api.ListSSHKeysRequest) (*api.ListSSHKeysResponse, error) {
@@ -176,6 +205,9 @@ func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMach
 		return nil, status.Errorf(codes.Internal, "create machine instance: %v", err)
 	}
 	log.Println("created machine instance", machine.ID)
+	// Record activity
+	go driver.recordActivity(api.Activity_MACHINE_CREATED, machine.ID)
+	// And return
 	return &api.CreateMachineResponse{
 		Id: machine.ID,
 	}, nil
@@ -188,6 +220,7 @@ func (driver *Driver) TriggerMachine(ctx context.Context, request *api.TriggerMa
 		return nil, status.Errorf(codes.Internal, "retrieve machine: %v", err)
 	}
 	// Trigger machine event
+	activityType := api.Activity_UNKNOWN
 	switch request.Event {
 	case api.TriggerMachineRequest_EVENT_UNKNOWN:
 		return nil, status.Errorf(codes.InvalidArgument, "unknown machine trigger event")
@@ -196,15 +229,18 @@ func (driver *Driver) TriggerMachine(ctx context.Context, request *api.TriggerMa
 		if err := driver.lv.StartMachine(&machine); err != nil {
 			return nil, status.Errorf(codes.Internal, "start machine: %v", err)
 		}
+		activityType = api.Activity_MACHINE_POWERON
 	case api.TriggerMachineRequest_POWEROFF:
 		// Power off machine
 		if err := driver.lv.StopMachine(&machine); err != nil {
 			return nil, status.Errorf(codes.Internal, "stop machine: %v", err)
 		}
+		activityType = api.Activity_MACHINE_POWEROFF
 	case api.TriggerMachineRequest_REBOOT:
 		if err := driver.lv.RebootMachine(&machine); err != nil {
 			return nil, status.Errorf(codes.Internal, "reboot machine: %v", err)
 		}
+		activityType = api.Activity_MACHINE_REBOOT
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "machine trigger event can not be handled")
 	}
@@ -213,6 +249,9 @@ func (driver *Driver) TriggerMachine(ctx context.Context, request *api.TriggerMa
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "get machine state after trigger: %v", err)
 	}
+	// Record activity
+	go driver.recordActivity(activityType, machine.ID)
+	// And return
 	return &api.TriggerMachineResponse{
 		Status: machineStateToApiStatus(state),
 	}, nil
@@ -319,6 +358,9 @@ func (driver *Driver) DeleteMachine(ctx context.Context, request *api.DeleteMach
 	if err := driver.db.Select("NetworkInterfaces").Delete(&machine).Error; err != nil {
 		return nil, status.Errorf(codes.Internal, "delete machine record: %v", err)
 	}
+	// Record activity
+	go driver.recordActivity(api.Activity_MACHINE_DELETED, machine.ID)
+	// And return
 	return &api.DeleteMachineResponse{}, nil
 }
 
@@ -348,7 +390,7 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 }
 
 func initModels(db *gorm.DB) error {
-	if err := db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{}); err != nil {
+	if err := db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{}, &models.Activity{}); err != nil {
 		return err
 	}
 

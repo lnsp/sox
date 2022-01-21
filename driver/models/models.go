@@ -1,6 +1,10 @@
 package models
 
-import "fmt"
+import (
+	"fmt"
+
+	"gorm.io/gorm"
+)
 
 type MachineState int64
 
@@ -49,6 +53,13 @@ type SSHKey struct {
 	ID     string `gorm:"primaryKey"`
 	Name   string `gorm:"uniqueIndex"`
 	Pubkey string
+}
+
+type Activity struct {
+	gorm.Model
+
+	Type    string
+	Subject string
 }
 
 type NetworkInterface struct {

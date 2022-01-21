@@ -3,6 +3,7 @@ module github.com/valar/virtm
 go 1.16
 
 require (
+	github.com/dustin/go-humanize v1.0.0 // indirect
 	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.5.1 // indirect

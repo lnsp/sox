@@ -7,6 +7,7 @@ import (
 	"text/tabwriter"
 	"time"
 
+	"github.com/dustin/go-humanize"
 	"github.com/spf13/cobra"
 	"github.com/valar/virtm/api"
 	"github.com/valar/virtm/meta"
@@ -340,6 +341,41 @@ var networksCmd = cobra.Command{
 	},
 }
 
+var activityCmd = cobra.Command{
+	Use:          "activity",
+	Short:        "List recent activities",
+	SilenceUsage: true,
+	RunE: func(cmd *cobra.Command, args []string) error {
+		client, err := connect()
+		if err != nil {
+			return err
+		}
+		// create context
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
+		defer cancel()
+		// list activities
+		resp, err := client.ListActivities(ctx, &api.ListActivitiesRequest{})
+		if err != nil {
+			return err
+		}
+		// print out activities
+		tw := tabwriter.NewWriter(os.Stdout, 1, 4, 1, ' ', 0)
+		defer tw.Flush()
+
+		fmt.Fprintf(tw, "TIME\tACTIVITY\tSUBJECT\n")
+		for _, act := range resp.Activities {
+			fmt.Fprintf(
+				tw,
+				"%s\t%s\t%s\n",
+				humanize.Time(act.Timestamp.AsTime()),
+				act.Type, act.Subject,
+			)
+		}
+
+		return nil
+	},
+}
+
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&endpoint, "endpoint", "p", "localhost:9876", "VirtM endpoint address")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", true, "Connect to insecure endpoint")
@@ -352,6 +388,7 @@ func init() {
 	machinesCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	rootCmd.AddCommand(&networksCmd)
 	networksCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
+	rootCmd.AddCommand(&activityCmd)
 	machinesCmd.AddCommand(&machinesCreateCmd)
 	machinesCmd.AddCommand(&machinesInspectCmd)
 	machinesCmd.AddCommand(&machinesDeleteCmd)

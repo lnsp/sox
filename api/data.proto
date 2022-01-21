@@ -1,5 +1,7 @@
 syntax = "proto3";
 
+import "google/protobuf/timestamp.proto";
+
 package virtm;
 
 option go_package = "github.com/valar/virtm/api;api";
@@ -70,4 +72,26 @@ message Network {
 
     repeated string nameservers = 5;
     repeated string searchDomains = 6;
+}
+
+message Activity {
+    Type type = 1;
+    google.protobuf.Timestamp timestamp = 2;
+    string subject = 3;
+
+    enum Type {
+        UNKNOWN = 0;
+
+        MACHINE_CREATED = 1;
+        MACHINE_POWERON = 2;
+        MACHINE_POWEROFF = 3;
+        MACHINE_DELETED = 4;
+        MACHINE_REBOOT = 5;
+
+        IMAGE_CREATED = 6;
+        IMAGE_DELETED = 7;
+
+        SSHKEY_CREATED = 8;
+        SSHKEY_DELETED = 9;
+    }
 }

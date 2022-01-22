@@ -7,6 +7,7 @@ export const state = () => ({
   images: [],
   networks: [],
   machineDetails: {},
+  activities: [],
 });
 
 export const mutations = {
@@ -28,6 +29,15 @@ export const mutations = {
   networks(state, networks) {
     state.networks = networks
   },
+  activities(state, activities) {
+    state.activities = activities
+  }
+}
+
+export const getters = {
+  reversedActivities: (state) => {
+    return state.activities.slice().reverse()
+  }
 }
 
 export const actions = {
@@ -54,5 +64,9 @@ export const actions = {
   async machineDetails({ commit }, id) {
     let details = await this.$axios.$get('/machines/' + id)
     commit('machineDetails', { id, details })
+  },
+  async activities({ commit }) {
+    let response = await this.$axios.$get('/activities')
+    commit('activities', response.activities)
   }
 }

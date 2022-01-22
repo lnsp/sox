@@ -39,6 +39,7 @@ export default {
     // https://vite.nuxtjs.org/getting-started/installation
     'nuxt-vite',
     '@nuxtjs/google-fonts',
+    '@nuxtjs/moment'
   ],
 
   // Modules: https://go.nuxtjs.dev/config-modules

@@ -33,12 +33,12 @@
         <div v-if="details.networkInterfaces.length > 0"
              class="flex flex-col items-end gap-2 font-mono">
           <div v-if="details.networkInterfaces[0].ipv4">
-            <span class="text-gray-300 mr-2 text-xs">{{ details.networkInterfaces[0].ipv4 }}</span>
-            <span class="border border-oxide-900 text-oxide-700 rounded text-xs px-2 py-1">IPv4</span>
+            <span class="text-gray-300 mr-2 text-sm">{{ details.networkInterfaces[0].ipv4 }}</span>
+            <span class="border border-oxide-700 text-oxide-700 rounded text-xs px-2 py-1">IPv4</span>
           </div>
           <div v-if="details.networkInterfaces[0].ipv6">
-            <span class="text-gray-300 mr-2 text-xs">{{ details.networkInterfaces[0].ipv6 }}</span>
-            <span class="border border-oxide-900 text-oxide-700 rounded text-xs px-2 py-1">IPv6</span>
+            <span class="text-gray-300 mr-2 text-sm">{{ details.networkInterfaces[0].ipv6 }}</span>
+            <span class="border border-oxide-700 text-oxide-700 rounded text-xs px-2 py-1">IPv6</span>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@
             <machine-nav-item :to="'/machines/' + details.id + '/management'">Management</machine-nav-item>
           </div>
         </div>
-        <div class="flex-grow p-8 overflow-y-scroll">
+        <div class="flex-grow p-8 overflow-y-auto">
           <NuxtChild class="h-0" />
         </div>
       </div>

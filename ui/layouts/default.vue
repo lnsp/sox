@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-row h-full relative">
     <Sidebar />
-    <div class="flex-grow bg-groy-900 text-gray-100 p-4 sm:p-10 overflow-scroll">
+    <div class="flex-grow bg-groy-900 text-gray-100 p-4 sm:p-10 overflow-y-auto">
       <Nuxt />
     </div>
     <div class="fixed w-full p-2 top-0 z-10" v-if="error">

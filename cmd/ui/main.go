@@ -78,6 +78,7 @@ func (handler *APIHandler) Init(mux *mux.Router) error {
 	mux.Handle("/ssh-keys", handler.listSSHKeys()).Methods(http.MethodGet)
 	mux.Handle("/images", handler.listImages()).Methods(http.MethodGet)
 	mux.Handle("/networks", handler.listNetworks()).Methods(http.MethodGet)
+	mux.Handle("/activities", handler.listActivities()).Methods(http.MethodGet)
 	return nil
 }
 
@@ -312,6 +313,35 @@ func (handler *APIHandler) triggerMachine() http.Handler {
 			Status string `json:"status"`
 		}{
 			Status: resp.Status.String(),
+		})
+	})
+}
+
+func (handler *APIHandler) listActivities() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		resp, err := handler.Client.ListActivities(r.Context(), &api.ListActivitiesRequest{})
+		if err != nil {
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			log.Println("list activities:", err)
+			return
+		}
+		type jsonActivity struct {
+			Timestamp time.Time `json:"timestamp"`
+			Subject   string    `json:"subject"`
+			Type      string    `json:"type"`
+		}
+		activities := make([]jsonActivity, len(resp.Activities))
+		for i := range resp.Activities {
+			activities[i] = jsonActivity{
+				Timestamp: resp.Activities[i].Timestamp.AsTime(),
+				Type:      resp.Activities[i].Type.String(),
+				Subject:   resp.Activities[i].Subject,
+			}
+		}
+		json.NewEncoder(w).Encode(struct {
+			Activities []jsonActivity `json:"activities"`
+		}{
+			Activities: activities,
 		})
 	})
 }

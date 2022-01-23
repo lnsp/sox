@@ -19,7 +19,7 @@
         <svg width="728"
              height="112"
              class="right-0">
-          <g v-for="(week, index) in weeklyActivity"
+          <g v-for="(week, index) in activitySummary"
              :key="index"
              :transform="`translate(${14 * index}, 0)`">
             <rect v-for="(score, index) in week"
@@ -31,15 +31,12 @@
                   rx="2"
                   ry="2"
                   class="fill-current"
-                  :class="[ score > 0 ? 'text-oxide-400' : 'text-oxide-900' ]"
-                  data-count="20"
-                  data-date="2021-01-17"
-                  data-level="3"></rect>
+                  :class="[ score > 0 ? 'text-oxide-400' : 'text-oxide-900' ]"></rect>
           </g>
         </svg>
       </div>
       <div class="flex flex-col gap-2">
-        <div v-for="activity in reversedActivities"
+        <div v-for="activity in weeklyActivity"
              :key="activity.timestamp"
              class="border border-oxide-900 p-4 flex space-between">
           <div class="text-left flex-grow font-mono">
@@ -65,9 +62,12 @@ export default {
     ...mapState("api", ["activities"]),
     ...mapGetters("api", ["reversedActivities"]),
     weeklyActivity() {
+      return this.reversedActivities.slice().filter(item => this.$moment().diff(this.$moment(item.timestamp), 'week') < 1)
+    },
+    activitySummary() {
       // Assume first activity has first timestamp, last activity last
       let lastTimestamp = this.$moment();
-      let firstTimestamp = lastTimestamp.clone().subtract("1", "year");
+      let firstTimestamp = lastTimestamp.clone().subtract("1", "year").endOf('week');
       let numberOfWeeks = lastTimestamp.diff(firstTimestamp, "week");
       let numberOfDaysPerWeek = 7;
 
@@ -80,15 +80,12 @@ export default {
         }
       }
 
-      for (const activity in this.activities) {
-        let timestamp = this.$moment(activity.timestamp);
-        let weekIndex =
-          weeks.length - 1 - lastTimestamp.diff(timestamp, "weeks");
-        if (weekIndex < 0) continue;
+      this.activities.forEach((item) => {
+        let ts = this.$moment(item.timestamp)
+        let idx = ts.diff(firstTimestamp, "week")
 
-        console.log(weekIndex, timestamp.day());
-        weeks[weekIndex][timestamp.day()]++;
-      }
+        if (idx >= 0) weeks[idx-1][ts.day()]++
+      })
 
       return weeks;
     },

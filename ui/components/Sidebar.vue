@@ -126,7 +126,7 @@ export default {
   },
   data() {
     return {
-      collapsed: process.client ? window.innerWidth < 1024 : true,
+      collapsed: true,
     };
   },
   mounted() {

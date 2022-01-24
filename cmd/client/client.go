@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"github.com/dustin/go-humanize"
+	"github.com/lnsp/virtm/api"
+	"github.com/lnsp/virtm/meta"
 	"github.com/spf13/cobra"
-	"github.com/valar/virtm/api"
-	"github.com/valar/virtm/meta"
 	"google.golang.org/grpc"
 )
 

@@ -1,4 +1,4 @@
-module github.com/valar/virtm
+module github.com/lnsp/virtm
 
 go 1.16
 

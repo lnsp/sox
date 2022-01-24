@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package virtm;
 
-option go_package = "github.com/valar/virtm/api;api";
+option go_package = "github.com/lnsp/virtm/api;api";
 
 import "data.proto";
 

@@ -8,9 +8,9 @@ import (
 	"net"
 
 	"github.com/google/uuid"
-	"github.com/valar/virtm/api"
-	"github.com/valar/virtm/driver/libvirt"
-	"github.com/valar/virtm/driver/models"
+	"github.com/lnsp/virtm/api"
+	"github.com/lnsp/virtm/driver/libvirt"
+	"github.com/lnsp/virtm/driver/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"

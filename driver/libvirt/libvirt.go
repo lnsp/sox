@@ -14,8 +14,8 @@ import (
 
 	"github.com/libvirt/libvirt-go"
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
-	"github.com/valar/virtm/driver/cloudconfig"
-	"github.com/valar/virtm/driver/models"
+	"github.com/lnsp/virtm/driver/cloudconfig"
+	"github.com/lnsp/virtm/driver/models"
 	"gopkg.in/yaml.v2"
 )
 

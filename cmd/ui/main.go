@@ -11,9 +11,9 @@ import (
 
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/valar/virtm/api"
-	"github.com/valar/virtm/meta"
-	"github.com/valar/virtm/ui"
+	"github.com/lnsp/virtm/api"
+	"github.com/lnsp/virtm/meta"
+	"github.com/lnsp/virtm/ui"
 	"google.golang.org/grpc"
 )
 

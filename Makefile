@@ -26,9 +26,9 @@ $(BIN_FOLDER):
 	mkdir -p $(BIN_FOLDER)
 
 build: $(BIN_FOLDER)
-	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(SERVER_BINARY_NAME) -v ./cmd/server
-	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(CLIENT_BINARY_NAME) -v ./cmd/client
-	$(GOBUILD) -ldflags '-X github.com/valar/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(UI_BINARY_NAME) -v ./cmd/ui
+	$(GOBUILD) -ldflags '-X github.com/lnsp/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(SERVER_BINARY_NAME) -v ./cmd/server
+	$(GOBUILD) -ldflags '-X github.com/lnsp/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(CLIENT_BINARY_NAME) -v ./cmd/client
+	$(GOBUILD) -ldflags '-X github.com/lnsp/virtm/meta.Version=$(VERSION)' -o $(BIN_FOLDER)/$(UI_BINARY_NAME) -v ./cmd/ui
 
 install:
 	unlink $(PREFIX)/$(SERVER_BINARY_NAME); cp $(BIN_FOLDER)/$(SERVER_BINARY_NAME) $(PREFIX)/$(SERVER_BINARY_NAME)

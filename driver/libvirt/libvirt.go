@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"text/template"
@@ -97,11 +98,17 @@ func configureImageNetworkInterface(machine *models.Machine, image string) error
 	return nil
 }
 
+var usernamePattern = regexp.MustCompile(`^[a-z][-a-z0-9]*$`)
+
 func writeCloudConfig(machine *models.Machine) (string, error) {
 	// Generate authorized_keys file
 	authorizedKeys := bytes.NewBuffer(nil)
 	for _, key := range machine.SSHKeys {
 		fmt.Fprintln(authorizedKeys, key.Pubkey)
+	}
+	// Make sure username is valid
+	if !usernamePattern.MatchString(machine.User) {
+		return "", fmt.Errorf("username must be valid")
 	}
 	// Create cloud config
 	shortuuid := machine.ID[:8]
@@ -111,9 +118,9 @@ func writeCloudConfig(machine *models.Machine) (string, error) {
 		ManageEtcHosts: true,
 		Users: []cloudconfig.User{
 			{
-				Name:           "debian",
+				Name:           machine.User,
 				Sudo:           "ALL=(ALL:ALL) NOPASSWD:ALL",
-				Home:           "/home/debian",
+				Home:           "/home/" + machine.User,
 				Shell:          "/bin/bash",
 				LockPasswd:     false,
 				AuthorizedKeys: authorizedKeys.String(),

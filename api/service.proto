@@ -30,6 +30,7 @@ message CreateMachineRequest {
     string image_id = 3;
     repeated string ssh_key_ids = 4;
     repeated string network_ids = 5;
+    string user = 6;
 }
 
 message CreateMachineResponse {

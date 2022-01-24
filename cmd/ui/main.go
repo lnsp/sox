@@ -265,6 +265,7 @@ func (handler *APIHandler) createMachine() http.Handler {
 			Image    string   `json:"imageId"`
 			SSHKeys  []string `json:"sshKeyIds"`
 			Networks []string `json:"networkIds"`
+			User     string   `json:"user"`
 		}
 		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 			http.Error(w, "could not decode body", http.StatusBadRequest)
@@ -281,6 +282,7 @@ func (handler *APIHandler) createMachine() http.Handler {
 			ImageId:    body.Image,
 			SshKeyIds:  body.SSHKeys,
 			NetworkIds: body.Networks,
+			User:       body.User,
 		})
 		if err != nil {
 			http.Error(w, "internal server error", http.StatusInternalServerError)

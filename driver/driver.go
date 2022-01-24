@@ -191,6 +191,7 @@ func (driver *Driver) CreateMachine(ctx context.Context, request *api.CreateMach
 	machine := models.Machine{
 		ID:                uuid.New().String(),
 		Name:              request.Name,
+		User:              request.User,
 		Image:             image,
 		SSHKeys:           sshKeys,
 		Specs:             specs,

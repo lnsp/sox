@@ -37,6 +37,8 @@ message Machine {
     string image_id = 6;
     repeated string ssh_key_ids = 7;
 
+    string user = 8;
+
     message Specs {
         int64 cpus = 1;
         int64 memory = 2;

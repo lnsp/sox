@@ -23,6 +23,7 @@ type Machine struct {
 	ImageID string
 	Image   Image
 
+	User    string
 	SSHKeys []SSHKey `gorm:"many2many:machine_ssh_keys"`
 
 	Specs             Specs              `gorm:"embedded"`

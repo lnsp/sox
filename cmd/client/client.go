@@ -172,6 +172,7 @@ var machinesCreateDisk int64
 var machinesCreateImage string
 var machinesCreateSSHKeys []string
 var machinesCreateNetworks []string
+var machinesCreateUser string
 
 var machinesCreateCmd = cobra.Command{
 	Use:   "create [name]",
@@ -196,6 +197,7 @@ var machinesCreateCmd = cobra.Command{
 			ImageId:    machinesCreateImage,
 			SshKeyIds:  machinesCreateSSHKeys,
 			NetworkIds: machinesCreateNetworks,
+			User:       machinesCreateUser,
 		})
 		if err != nil {
 			return err
@@ -401,6 +403,7 @@ func init() {
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateCpu, "cpu", 2, "Number of vCPUs")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateDisk, "disk", 10000, "Disk size in GB")
 	machinesCreateCmd.Flags().Int64Var(&machinesCreateMemory, "memory", 2000, "Memory size in MB")
+	machinesCreateCmd.Flags().StringVarP(&machinesCreateUser, "user", "u", "ken", "User account to be created")
 	machinesCreateCmd.MarkFlagRequired("image")
 	machinesCreateCmd.MarkFlagRequired("ssh-key")
 	machinesCreateCmd.MarkFlagRequired("networks")

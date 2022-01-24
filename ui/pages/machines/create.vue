@@ -106,9 +106,17 @@
           </div>
         </div>
       </create-section-item>
-      <create-section-item :index=4
+      <create-section-item :index=4 title="Pick a username" :disabled="disabled(4)">
+        <text-input v-model="machine.user" />
+        <div class="text-sm mt-2 text-red-500 font-mono"
+             v-if="machine.user.match(/^[a-z][-a-z0-9]*$/g) === null">
+          User must match
+          <pre class="inline text-xs p-1">/^[a-z][a-z0-9]*$/g</pre>
+        </div>
+      </create-section-item>
+      <create-section-item :index=5
                            title="Pick an SSH key"
-                           :disabled="disabled(4)">
+                           :disabled="disabled(5)">
         <div v-for="key in sshKeys"
              :key="key.id"
              @click="toggleSSHKey(key.id)"
@@ -131,9 +139,9 @@
           </div>
         </div>
       </create-section-item>
-      <create-section-item :index=5
+      <create-section-item :index=6
                            title="Verify settings and confirm"
-                           :disabled="disabled(5)">
+                           :disabled="disabled(6)">
         <button @click.prevent="createMachine"
                 class="mt-2 font-mono flex items-center text-oxide-400 border-b border-transparent hover:border-oxide-400">
           <span class="mr-3">
@@ -179,7 +187,9 @@
 </template>
 
 <script>
+import CreateSectionItem from '../../components/CreateSectionItem.vue';
 export default {
+  components: { CreateSectionItem },
   computed: {
     images() {
       return this.$store.state.api.images;
@@ -203,6 +213,7 @@ export default {
         imageId: "",
         networkIds: [],
         sshKeyIds: [],
+        user: '',
       },
       creating: null,
       id: null,
@@ -230,44 +241,13 @@ export default {
       }
     },
     disabled(stage) {
-      switch (stage) {
-        case 0:
-          return this.creating || this.id !== null;
-        case 1:
-          return (
-            this.creating ||
-            this.id !== null ||
-            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null
-          );
-        case 2:
-          return (
-            this.creating ||
-            this.id !== null ||
-            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null
-          );
-        case 3:
-          return (
-            this.creating ||
-            this.id !== null ||
-            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null ||
-            this.imageId === ""
-          );
-        case 4:
-          return (
-            this.creating ||
-            this.id !== null ||
-            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null ||
-            this.machine.imageId === "" ||
-            this.machine.networkIds.length == 0
-          );
-        case 5:
-          return (
-            this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null ||
-            this.machine.imageId === "" ||
-            this.machine.networkIds.length === 0 ||
-            this.machine.sshKeyIds.length === 0
-          );
-      }
+      if (this.creating || this.id !== null) return false;
+      else if (this.machine.name.match(/^[a-zA-Z0-9]+$/g) === null) return stage >= 1;
+      else if (this.machine.imageId === '') return stage >= 3;
+      else if (this.machine.networkIds.length === 0) return stage >= 4;
+      else if (this.machine.user.match(/^[a-z][-a-z0-9]*$/) === null) return stage >= 5;
+      else if (this.machine.sshKeyIds.length == 0) return stage >= 6;
+      return false;
     },
     toggleSSHKey(keyId) {
       if (this.machine.sshKeyIds.includes(keyId)) {

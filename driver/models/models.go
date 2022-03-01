@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"path/filepath"
 
 	"gorm.io/gorm"
 )
@@ -28,6 +29,10 @@ type Machine struct {
 
 	Specs             Specs              `gorm:"embedded"`
 	NetworkInterfaces []NetworkInterface `gorm:"foreignkey:machine_id"`
+}
+
+func (m *Machine) LiveImagePaths() (string, string) {
+	return filepath.Join(filepath.Dir(m.Image.Path), m.ID+"-config.img"), filepath.Join(filepath.Dir(m.Image.Path), m.ID+".qcow2")
 }
 
 type Specs struct {

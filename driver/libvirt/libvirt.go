@@ -301,7 +301,14 @@ func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {
 		return fmt.Errorf("undefine domain: %w", err)
 	}
 	log.Println("undefined libvirt domain", machine.ID)
-	// TODO(lnsp): What about disks?
+	// Delete disks
+	configDiskPath, imageDiskPath := machine.LiveImagePaths()
+	if err := os.Remove(configDiskPath); err != nil {
+		log.Println("attempted to delete config disk:", err)
+	}
+	if err := os.Remove(imageDiskPath); err != nil {
+		log.Println("attempted to delete image disk:", err)
+	}
 	return nil
 }
 
@@ -379,8 +386,7 @@ func (lv *Libvirt) GetMachineState(id string) (models.MachineState, error) {
 
 func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	// Get source img path
-	configImagePath := filepath.Join(filepath.Dir(machine.Image.Path), machine.ID+"-config.img")
-	osImagePath := filepath.Join(filepath.Dir(machine.Image.Path), machine.ID+".qcow2")
+	configImagePath, osImagePath := machine.LiveImagePaths()
 	osImageSize := fmt.Sprintf("%dG", machine.Specs.Disk)
 	// Create image snapshot
 	if err := exec.Command("qemu-img", "create", "-b", machine.Image.Path, "-f", "qcow2", "-F", "qcow2", osImagePath, osImageSize).Run(); err != nil {
@@ -418,22 +424,4 @@ func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	}
 	log.Println("created libvirt domain", machine.ID)
 	return nil
-}
-
-type StatRecord struct {
-	Value     float32
-	Timestamp int64
-}
-
-func (lv *Libvirt) CpuStats(id string) ([]StatRecord, error) {
-	dom, err := lv.conn.LookupDomainByUUIDString(id)
-	if err != nil {
-		return nil, fmt.Errorf("lookup domain: %w", err)
-	}
-	stats, err := dom.GetCPUStats(-1, 0, 0)
-	if err != nil {
-		return nil, fmt.Errorf("get cpu stats: %w", err)
-	}
-	_ = stats
-	return nil, nil
 }

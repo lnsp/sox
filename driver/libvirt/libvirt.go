@@ -20,12 +20,13 @@ import (
 )
 
 type Libvirt struct {
-	conn    *libvirt.Connect
-	network *libvirt.Network
-	storage *libvirt.StoragePool
+	conn        *libvirt.Connect
+	network     *libvirt.Network
+	storagePool *libvirt.StoragePool
+	storagePath string
 }
 
-func New(uri string, network string, storagePool string) (*Libvirt, error) {
+func New(uri string, network string, storagePath string) (*Libvirt, error) {
 	conn, err := libvirt.NewConnect(uri)
 	if err != nil {
 		return nil, fmt.Errorf("connect to libvirt: %w", err)
@@ -39,16 +40,20 @@ func New(uri string, network string, storagePool string) (*Libvirt, error) {
 	netId, _ := net.GetUUIDString()
 	log.Println("found network", netId)
 	// get storagepool info
-	storage, err := conn.LookupStoragePoolByName(storagePool)
+	storagePool, err := conn.LookupStoragePoolByTargetPath(storagePath)
 	if err != nil {
 		return nil, fmt.Errorf("find storage pool: %w", err)
 	}
-	storageId, _ := storage.GetUUIDString()
-	log.Println("found storage pool", storageId)
+	storagePoolId, err := storagePool.GetUUIDString()
+	if err != nil {
+		return nil, fmt.Errorf("get storage pool id: %w", err)
+	}
+	log.Println("found storage pool", storagePoolId)
 	return &Libvirt{
-		conn:    conn,
-		network: net,
-		storage: storage,
+		conn:        conn,
+		network:     net,
+		storagePool: storagePool,
+		storagePath: storagePath,
 	}, nil
 }
 
@@ -302,7 +307,7 @@ func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {
 	}
 	log.Println("undefined libvirt domain", machine.ID)
 	// Delete disks
-	configDiskPath, imageDiskPath := machine.LiveImagePaths()
+	configDiskPath, imageDiskPath := machine.LiveImagePaths(lv.storagePath)
 	if err := os.Remove(configDiskPath); err != nil {
 		log.Println("attempted to delete config disk:", err)
 	}
@@ -386,7 +391,7 @@ func (lv *Libvirt) GetMachineState(id string) (models.MachineState, error) {
 
 func (lv *Libvirt) CreateMachine(machine *models.Machine) error {
 	// Get source img path
-	configImagePath, osImagePath := machine.LiveImagePaths()
+	configImagePath, osImagePath := machine.LiveImagePaths(lv.storagePath)
 	osImageSize := fmt.Sprintf("%dG", machine.Specs.Disk)
 	// Create image snapshot
 	if err := exec.Command("qemu-img", "create", "-b", machine.Image.Path, "-f", "qcow2", "-F", "qcow2", osImagePath, osImageSize).Run(); err != nil {

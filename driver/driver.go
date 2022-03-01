@@ -375,11 +375,11 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 		apiNetworks[i] = &api.Network{
 			Id:   networks[i].ID,
 			Name: networks[i].Name,
-			IpV4: &api.Network_IpNetwork{
+			IpV4: &api.IpNetwork{
 				Subnet:  networks[i].IPv4.Subnet,
 				Gateway: networks[i].IPv4.Gateway,
 			},
-			IpV6: &api.Network_IpNetwork{
+			IpV6: &api.IpNetwork{
 				Subnet:  networks[i].IPv6.Subnet,
 				Gateway: networks[i].IPv6.Gateway,
 			},

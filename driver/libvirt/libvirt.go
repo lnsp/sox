@@ -85,7 +85,7 @@ func configureImageNetworkInterface(machine *models.Machine, image string) error
 			Nameservers []string
 			Gateway     string
 		}{
-			Name:        fmt.Sprintf("enp1s%d", i),
+			Name:        fmt.Sprintf("enp%ds0", i+1),
 			Nameservers: strings.Fields(iface.Network.Nameservers),
 			AddressCIDR: iface.IPv4,
 			Gateway:     iface.Network.IPv4.Gateway,

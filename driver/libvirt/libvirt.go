@@ -156,19 +156,18 @@ func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifa
 	// Generate network interface list
 	lvIfaces := make([]libvirtxml.DomainInterface, len(ifaces))
 	for i := range ifaces {
-		source := &libvirtxml.DomainInterfaceSourceNetwork{}
+		source := &libvirtxml.DomainInterfaceSource{}
 		if ifaces[i].Network.Bridge != "" {
-			source.Bridge = ifaces[i].Network.Bridge
+			source.Bridge = &libvirtxml.DomainInterfaceSourceBridge{
+				Bridge: ifaces[i].Network.Bridge,
+			}
 		} else {
-			source.Network = ifaces[i].Network.Name
+			source.Network = &libvirtxml.DomainInterfaceSourceNetwork{
+				Network: ifaces[i].Network.Name,
+			}
 		}
 		lvIfaces[i] = libvirtxml.DomainInterface{
-			Source: &libvirtxml.DomainInterfaceSource{
-				Network: &libvirtxml.DomainInterfaceSourceNetwork{
-					Network: ifaces[i].Network.Name,
-					Bridge:  ifaces[i].Network.Bridge,
-				},
-			},
+			Source: source,
 			MAC: &libvirtxml.DomainInterfaceMAC{
 				Address: ifaces[i].HwAddr,
 			},

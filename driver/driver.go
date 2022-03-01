@@ -392,8 +392,9 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 
 func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetworkRequest) (*api.CreateNetworkResponse, error) {
 	network := &models.Network{
-		ID:   uuid.New().String(),
-		Name: request.Name,
+		ID:     uuid.New().String(),
+		Name:   request.Name,
+		Bridge: request.Bridge,
 		IPv4: models.NetworkSpec{
 			Subnet:  request.IpV4.Subnet,
 			Gateway: request.IpV4.Gateway,

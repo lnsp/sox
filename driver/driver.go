@@ -403,7 +403,7 @@ func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetw
 			Gateway: request.IpV6.Gateway,
 		},
 	}
-	if err := driver.db.Create(&network); err != nil {
+	if err := driver.db.Create(&network).Error; err != nil {
 		return nil, status.Errorf(codes.Internal, "create network: %v", err)
 	}
 	return &api.CreateNetworkResponse{

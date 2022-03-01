@@ -19,7 +19,9 @@ service VirtM {
     rpc DeleteSSHKey(DeleteSSHKeyRequest) returns (DeleteSSHKeyResponse);
 
     rpc ListImages(ListImagesRequest) returns (ListImagesResponse);
+
     rpc ListNetworks(ListNetworksRequest) returns (ListNetworksResponse);
+    rpc CreateNetwork(CreateNetworkRequest) returns (CreateNetworkResponse);
 
     rpc ListActivities(ListActivitiesRequest) returns (ListActivitiesResponse);
 }
@@ -91,6 +93,18 @@ message ListNetworksRequest {}
 
 message ListNetworksResponse {
     repeated Network networks = 1;
+}
+
+message CreateNetworkRequest {
+    string name = 1;
+    string bridge = 2;
+
+    IpNetwork ip_v4 = 3;
+    IpNetwork ip_v6 = 4;
+}
+
+message CreateNetworkResponse {
+    string id = 1;
 }
 
 message TriggerMachineRequest {

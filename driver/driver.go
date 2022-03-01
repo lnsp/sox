@@ -349,7 +349,7 @@ func (driver *Driver) ListMachines(ctx context.Context, request *api.ListMachine
 func (driver *Driver) DeleteMachine(ctx context.Context, request *api.DeleteMachineRequest) (*api.DeleteMachineResponse, error) {
 	// Destroy machine instance
 	var machine models.Machine
-	if err := driver.db.Where("id = ?", request.Id, request.Id).First(&machine).Error; err != nil {
+	if err := driver.db.Preload("Images").Where("id = ?", request.Id, request.Id).First(&machine).Error; err != nil {
 		return nil, status.Errorf(codes.NotFound, "retrieve machine: %v", err)
 	}
 	if err := driver.lv.DeleteMachine(&machine); err != nil {

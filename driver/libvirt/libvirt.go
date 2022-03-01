@@ -61,8 +61,8 @@ var networkIfaceTemplate = template.Must(template.New("network").Parse(`
 auto {{ .Name }}
 iface {{ .Name }} inet static
 	address {{ .AddressCIDR }}
-	gateway {{ .Gateway }}
-	dns-nameservers{{ range .Nameservers }} {{ . }}{{ end }}
+	{{ if .Gateway }}gateway {{ .Gateway }}{{ end }}
+	{{ if .Nameservers }}dns-nameservers{{ range .Nameservers }} {{ . }}{{ end }}{{ end }}
 `))
 
 func configureImageNetworkInterface(machine *models.Machine, image string) error {
@@ -160,6 +160,7 @@ func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifa
 			Source: &libvirtxml.DomainInterfaceSource{
 				Network: &libvirtxml.DomainInterfaceSourceNetwork{
 					Network: ifaces[i].Network.Name,
+					Bridge:  ifaces[i].Network.Bridge,
 				},
 			},
 			MAC: &libvirtxml.DomainInterfaceMAC{

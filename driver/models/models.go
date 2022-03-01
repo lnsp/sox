@@ -88,6 +88,7 @@ type Network struct {
 	IPv4 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv4_"`
 	IPv6 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv6_"`
 
+	Bridge        string
 	Nameservers   string
 	SearchDomains string
 }

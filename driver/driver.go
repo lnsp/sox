@@ -390,6 +390,27 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 	}, nil
 }
 
+func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetworkRequest) (*api.CreateNetworkResponse, error) {
+	network := &models.Network{
+		ID:   uuid.New().String(),
+		Name: request.Name,
+		IPv4: models.NetworkSpec{
+			Subnet:  request.IpV4.Subnet,
+			Gateway: request.IpV4.Gateway,
+		},
+		IPv6: models.NetworkSpec{
+			Subnet:  request.IpV6.Subnet,
+			Gateway: request.IpV6.Gateway,
+		},
+	}
+	if err := driver.db.Create(&network); err != nil {
+		return nil, status.Errorf(codes.Internal, "create network: %v", err)
+	}
+	return &api.CreateNetworkResponse{
+		Id: network.ID,
+	}, nil
+}
+
 func initModels(db *gorm.DB) error {
 	if err := db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{}, &models.Activity{}); err != nil {
 		return err

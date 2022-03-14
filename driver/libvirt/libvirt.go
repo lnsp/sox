@@ -353,10 +353,15 @@ func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, 
 		return lvnet, nil
 	}
 	// Network not found, create new one
+	_, netmask, err := net.ParseCIDR(network.IPv4.Subnet)
+	if err != nil {
+		return nil, fmt.Errorf("parse network cidr: %w", err)
+	}
+	prefix, _ := netmask.Mask.Size()
 	lvipXml := []libvirtxml.NetworkIP{
 		{
 			Address: network.IPv4.Gateway,
-			Netmask: network.IPv4.Subnet,
+			Prefix:  uint(prefix),
 		},
 	}
 	lvnetXml := &libvirtxml.Network{

@@ -466,7 +466,7 @@ func New(dbDsn string, libvirtUri string) (*Driver, error) {
 	if err := initModels(db); err != nil {
 		return nil, fmt.Errorf("init models: %w", err)
 	}
-	lv, err := libvirt.New(libvirtUri, "network", "/var/lib/libvirt/images")
+	lv, err := libvirt.New(libvirtUri, "/var/lib/libvirt/images")
 	if err != nil {
 		return nil, fmt.Errorf("init libvirt: %w", err)
 	}

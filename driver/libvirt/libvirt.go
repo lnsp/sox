@@ -23,24 +23,16 @@ import (
 
 type Libvirt struct {
 	conn        *libvirt.Connect
-	network     *libvirt.Network
 	storagePool *libvirt.StoragePool
 	storagePath string
 }
 
-func New(uri string, network string, storagePath string) (*Libvirt, error) {
+func New(uri string, storagePath string) (*Libvirt, error) {
 	conn, err := libvirt.NewConnect(uri)
 	if err != nil {
 		return nil, fmt.Errorf("connect to libvirt: %w", err)
 	}
 	log.Println("connected to libvirt", uri)
-	// get network info
-	net, err := conn.LookupNetworkByName(network)
-	if err != nil {
-		return nil, fmt.Errorf("find network: %w", err)
-	}
-	netId, _ := net.GetUUIDString()
-	log.Println("found network", netId)
 	// get storagepool info
 	storagePool, err := conn.LookupStoragePoolByTargetPath(storagePath)
 	if err != nil {
@@ -53,7 +45,6 @@ func New(uri string, network string, storagePath string) (*Libvirt, error) {
 	log.Println("found storage pool", storagePoolId)
 	return &Libvirt{
 		conn:        conn,
-		network:     net,
 		storagePool: storagePool,
 		storagePath: storagePath,
 	}, nil

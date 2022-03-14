@@ -346,7 +346,8 @@ func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, err
 func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, error) {
 	// Handle libvirt network
 	lvnet, err := lv.conn.LookupNetworkByUUIDString(network.ID)
-	if err != nil && err != libvirt.ERR_NO_NETWORK {
+	lvErr, _ := err.(libvirt.Error)
+	if err != nil && lvErr.Code != libvirt.ERR_NO_NETWORK {
 		return nil, fmt.Errorf("lookup network: %w", err)
 	} else if err == nil {
 		return lvnet, nil

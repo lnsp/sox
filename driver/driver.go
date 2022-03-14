@@ -412,6 +412,21 @@ func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetw
 	}, nil
 }
 
+func (driver *Driver) Recover() error {
+	// Go through networks and re-create them
+	var networks []models.Network
+	if err := driver.db.Find(&networks).Error; err != nil {
+		return fmt.Errorf("find networks: %w", err)
+	}
+	for i := range networks {
+		if err := driver.lv.CreateNetwork(&networks[i]); err != nil {
+			return fmt.Errorf("create network: %w", err)
+		}
+	}
+	// TODO(lnsp): Restore state of virtual machines
+	return nil
+}
+
 func initModels(db *gorm.DB) error {
 	if err := db.AutoMigrate(&models.NetworkInterface{}, &models.Machine{}, &models.Image{}, &models.SSHKey{}, &models.Network{}, &models.Activity{}); err != nil {
 		return err
@@ -455,8 +470,12 @@ func New(dbDsn string, libvirtUri string) (*Driver, error) {
 	if err != nil {
 		return nil, fmt.Errorf("init libvirt: %w", err)
 	}
-	return &Driver{
+	driver := &Driver{
 		db: db,
 		lv: lv,
-	}, nil
+	}
+	if err := driver.Recover(); err != nil {
+		return nil, fmt.Errorf("recover: %w", err)
+	}
+	return driver, nil
 }

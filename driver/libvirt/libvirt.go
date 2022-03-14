@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -16,6 +17,7 @@ import (
 	libvirtxml "github.com/libvirt/libvirt-go-xml"
 	"github.com/lnsp/virtm/driver/cloudconfig"
 	"github.com/lnsp/virtm/driver/models"
+	"github.com/vishvananda/netlink"
 	"gopkg.in/yaml.v2"
 )
 
@@ -159,11 +161,11 @@ func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifa
 		source := &libvirtxml.DomainInterfaceSource{}
 		if ifaces[i].Network.Bridge != "" {
 			source.Bridge = &libvirtxml.DomainInterfaceSourceBridge{
-				Bridge: ifaces[i].Network.Bridge,
+				Bridge: ifaces[i].Network.NetlinkBridge(),
 			}
 		} else {
 			source.Network = &libvirtxml.DomainInterfaceSourceNetwork{
-				Network: ifaces[i].Network.Name,
+				Network: ifaces[i].Network.ID,
 			}
 		}
 		lvIfaces[i] = libvirtxml.DomainInterface{
@@ -288,6 +290,129 @@ func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifa
 	}
 	xml, _ := dom.Marshal()
 	return xml
+}
+
+func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, error) {
+	// Ensure that bridge exists
+	bridge, err := netlink.LinkByName(network.NetlinkBridge())
+	if err == nil {
+		return bridge, nil
+	}
+	switch err.(type) {
+	default:
+		return nil, err
+	case netlink.LinkNotFoundError:
+	}
+	if !strings.Contains(err.Error(), "Link not found") {
+		return nil, fmt.Errorf("get bridge: %w", err)
+	}
+	// Create *netlink.Bridge object.
+	la := netlink.NewLinkAttrs()
+	la.Name = network.Name
+	la.MTU = 1500
+	bridge = &netlink.Bridge{LinkAttrs: la}
+	if err := netlink.LinkAdd(bridge); err != nil {
+		return nil, fmt.Errorf("add bridge: %w", err)
+	}
+	// Reload bridge
+	bridge, err = netlink.LinkByName(network.Name)
+	if err != nil {
+		return nil, fmt.Errorf("find bridge: %w", err)
+	}
+	// Setup ip address for bridge.
+	_, ipnetv4, err := net.ParseCIDR(network.IPv4.Subnet)
+	if err != nil {
+		return nil, fmt.Errorf("parse subnet CIDR: %w", err)
+	}
+	addrv4 := &netlink.Addr{
+		IPNet: ipnetv4,
+	}
+	if err := netlink.AddrAdd(bridge, addrv4); err != nil {
+		return nil, fmt.Errorf("add bridge addr: %w", err)
+	}
+	// Add vxlan device
+	vxlanAttr := netlink.NewLinkAttrs()
+	vxlanAttr.Name = network.NetlinkVxlan()
+	vxlanAttr.MasterIndex = bridge.Attrs().Index
+	vxlanLink := &netlink.Vxlan{
+		LinkAttrs: vxlanAttr,
+		VxlanId:   network.NetlinkVxlanId(),
+		Group:     net.IPv4(239, 1, 1, 1),
+	}
+	if err := netlink.LinkAdd(vxlanLink); err != nil {
+		return nil, fmt.Errorf("create vxlan: %w", err)
+	}
+	if err := netlink.LinkSetUp(vxlanLink); err != nil {
+		return nil, fmt.Errorf("set vxlan up: %w", err)
+	}
+	// Bring the bridge up.
+	if err := netlink.LinkSetUp(bridge); err != nil {
+		return nil, fmt.Errorf("set bridge up: %w", err)
+	}
+	return bridge, nil
+}
+
+func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, error) {
+	// Handle libvirt network
+	lvnet, err := lv.conn.LookupNetworkByUUIDString(network.ID)
+	if err != nil && err != libvirt.ERR_NO_NETWORK {
+		return nil, fmt.Errorf("lookup network: %w", err)
+	} else if err == nil {
+		return lvnet, nil
+	}
+	// Network not found, create new one
+	lvnetXml := &libvirtxml.Network{
+		UUID: network.ID,
+		Name: network.ID,
+		Forward: &libvirtxml.NetworkForward{
+			NAT: &libvirtxml.NetworkForwardNAT{
+				Ports: []libvirtxml.NetworkForwardNATPort{
+					{
+						Start: 1024,
+						End:   65535,
+					},
+				},
+			},
+		},
+		Bridge: &libvirtxml.NetworkBridge{
+			Name:  network.NetlinkBridge(),
+			STP:   "on",
+			Delay: "0",
+		},
+	}
+	xml, _ := lvnetXml.Marshal()
+	lvnet, err = lv.conn.NetworkCreateXML(xml)
+	if err != nil {
+		return nil, fmt.Errorf("create network: %w", err)
+	}
+	return lvnet, nil
+}
+
+// CreateNetwork ensures that the specified network exists on the machine.
+func (lv *Libvirt) CreateNetwork(network *models.Network) error {
+	if network.Bridge != "" {
+		// Handle bridged network
+		_, err := lv.createVxlanBridge(network)
+		if err != nil {
+			return fmt.Errorf("create bridge: %w", err)
+		}
+		return nil
+	}
+	lvnet, err := lv.createNATNetwork(network)
+	if err != nil {
+		return fmt.Errorf("create NAT network: %w", err)
+	}
+	// Make sure that network is active
+	active, err := lvnet.IsActive()
+	if err != nil {
+		return fmt.Errorf("check network isActive: %w", err)
+	}
+	if !active {
+		if err := lvnet.Create(); err != nil {
+			return fmt.Errorf("start network :%w", err)
+		}
+	}
+	return nil
 }
 
 func (lv *Libvirt) DeleteMachine(machine *models.Machine) error {

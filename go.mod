@@ -14,6 +14,7 @@ require (
 	github.com/libvirt/libvirt-go-xml v7.4.0+incompatible
 	github.com/pelletier/go-toml v1.9.3
 	github.com/spf13/cobra v1.2.1
+	github.com/vishvananda/netlink v1.1.0 // indirect
 	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf // indirect
 	golang.org/x/sys v0.0.0-20210921065528-437939a70204 // indirect
 	google.golang.org/grpc v1.41.0

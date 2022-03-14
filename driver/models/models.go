@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"hash/maphash"
 	"path/filepath"
 
 	"gorm.io/gorm"
@@ -91,6 +92,20 @@ type Network struct {
 	Bridge        string
 	Nameservers   string
 	SearchDomains string
+}
+
+func (n *Network) NetlinkVxlan() string {
+	return fmt.Sprintf("vxlan-%s", n.Name)
+}
+
+func (n *Network) NetlinkVxlanId() int {
+	var mh maphash.Hash
+	mh.WriteString(n.Name)
+	return int(mh.Sum64() % 1 << 24)
+}
+
+func (n *Network) NetlinkBridge() string {
+	return fmt.Sprintf("virbr-%s", n.Name)
 }
 
 type NetworkSpec struct {

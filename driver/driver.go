@@ -391,7 +391,7 @@ func (driver *Driver) ListNetworks(ctx context.Context, request *api.ListNetwork
 }
 
 func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetworkRequest) (*api.CreateNetworkResponse, error) {
-	network := &models.Network{
+	network := models.Network{
 		ID:     uuid.New().String(),
 		Name:   request.Name,
 		Bridge: request.Bridge,
@@ -405,6 +405,10 @@ func (driver *Driver) CreateNetwork(ctx context.Context, request *api.CreateNetw
 		},
 	}
 	if err := driver.db.Create(&network).Error; err != nil {
+		return nil, status.Errorf(codes.Internal, "add network entry: %v", err)
+	}
+	// Create network in libvirt
+	if err := driver.lv.CreateNetwork(&network); err != nil {
 		return nil, status.Errorf(codes.Internal, "create network: %v", err)
 	}
 	return &api.CreateNetworkResponse{

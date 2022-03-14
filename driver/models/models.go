@@ -95,7 +95,7 @@ type Network struct {
 }
 
 func (n *Network) NetlinkVxlan() string {
-	return fmt.Sprintf("vxlan-%s", n.Name)
+	return fmt.Sprintf("vxlan-%d", n.BridgeID)
 }
 
 func (n *Network) NetlinkVxlanId() int {

@@ -101,7 +101,7 @@ func (n *Network) NetlinkVxlan() string {
 func (n *Network) NetlinkVxlanId() int {
 	var mh maphash.Hash
 	mh.WriteString(n.Name)
-	return int(mh.Sum64() % 1 << 24)
+	return int(mh.Sum64() % (1 << 24))
 }
 
 func (n *Network) NetlinkBridge() string {

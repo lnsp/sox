@@ -299,7 +299,7 @@ func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, err
 	}
 	// Create *netlink.Bridge object.
 	la := netlink.NewLinkAttrs()
-	la.Name = network.Name
+	la.Name = network.NetlinkBridge()
 	la.MTU = 1500
 	bridge = &netlink.Bridge{LinkAttrs: la}
 	if err := netlink.LinkAdd(bridge); err != nil {

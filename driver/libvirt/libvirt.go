@@ -306,7 +306,7 @@ func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, err
 		return nil, fmt.Errorf("add bridge: %w", err)
 	}
 	// Reload bridge
-	bridge, err = netlink.LinkByName(network.Name)
+	bridge, err = netlink.LinkByName(network.NetlinkBridge())
 	if err != nil {
 		return nil, fmt.Errorf("find bridge: %w", err)
 	}

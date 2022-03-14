@@ -353,6 +353,12 @@ func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, 
 		return lvnet, nil
 	}
 	// Network not found, create new one
+	lvipXml := []libvirtxml.NetworkIP{
+		{
+			Address: network.IPv4.Gateway,
+			Netmask: network.IPv4.Subnet,
+		},
+	}
 	lvnetXml := &libvirtxml.Network{
 		UUID: network.ID,
 		Name: network.ID,
@@ -366,6 +372,7 @@ func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, 
 				},
 			},
 		},
+		IPs: lvipXml,
 		Bridge: &libvirtxml.NetworkBridge{
 			Name:  network.NetlinkBridge(),
 			STP:   "on",

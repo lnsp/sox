@@ -89,9 +89,9 @@ type Network struct {
 	IPv4 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv4_"`
 	IPv6 NetworkSpec `gorm:"embedded;embeddedPrefix:ipv6_"`
 
-	Bridge        string
 	Nameservers   string
 	SearchDomains string
+	BridgeID      uint32
 }
 
 func (n *Network) NetlinkVxlan() string {
@@ -105,7 +105,14 @@ func (n *Network) NetlinkVxlanId() int {
 }
 
 func (n *Network) NetlinkBridge() string {
-	return fmt.Sprintf("virbr-%s", n.Name)
+	if n.BridgeID != 0 {
+		return fmt.Sprintf("vxbr-%d", n.BridgeID)
+	}
+	return fmt.Sprintf("natbr-%s", n.Name)
+}
+
+func (n *Network) IsBridge() bool {
+	return n.BridgeID != 0
 }
 
 type NetworkSpec struct {

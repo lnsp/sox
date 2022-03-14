@@ -74,7 +74,7 @@ message Network {
 
     repeated string nameservers = 5;
     repeated string searchDomains = 6;
-    string bridge = 7;
+    uint32 bridge_id = 7;
 }
 
 message Activity {

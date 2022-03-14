@@ -150,7 +150,7 @@ func buildDomXml(id string, specs models.Specs, configImage, osImage string, ifa
 	lvIfaces := make([]libvirtxml.DomainInterface, len(ifaces))
 	for i := range ifaces {
 		source := &libvirtxml.DomainInterfaceSource{}
-		if ifaces[i].Network.Bridge != "" {
+		if ifaces[i].Network.IsBridge() {
 			source.Bridge = &libvirtxml.DomainInterfaceSourceBridge{
 				Bridge: ifaces[i].Network.NetlinkBridge(),
 			}
@@ -394,7 +394,7 @@ func (lv *Libvirt) createNATNetwork(network *models.Network) (*libvirt.Network, 
 
 // CreateNetwork ensures that the specified network exists on the machine.
 func (lv *Libvirt) CreateNetwork(network *models.Network) error {
-	if network.Bridge != "" {
+	if network.IsBridge() {
 		// Handle bridged network
 		_, err := lv.createVxlanBridge(network)
 		if err != nil {

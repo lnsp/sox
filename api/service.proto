@@ -97,7 +97,7 @@ message ListNetworksResponse {
 
 message CreateNetworkRequest {
     string name = 1;
-    string bridge = 2;
+    uint32 bridge_id = 2;
 
     IpNetwork ip_v4 = 3;
     IpNetwork ip_v6 = 4;

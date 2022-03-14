@@ -344,7 +344,7 @@ var networksCmd = cobra.Command{
 }
 
 var networksCreateName string
-var networksCreateBridge string
+var networksCreateBridgeId uint32
 var networksCreateIPV4Subnet string
 var networksCreateIPV4Gateway string
 var networksCreateIPV6Subnet string
@@ -362,8 +362,8 @@ var networksCreateCmd = cobra.Command{
 		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 		resp, err := client.CreateNetwork(ctx, &api.CreateNetworkRequest{
-			Name:   networksCreateName,
-			Bridge: networksCreateBridge,
+			Name:     networksCreateName,
+			BridgeId: networksCreateBridgeId,
 			IpV4: &api.IpNetwork{
 				Subnet:  networksCreateIPV4Subnet,
 				Gateway: networksCreateIPV4Gateway,
@@ -430,7 +430,7 @@ func init() {
 	networksCmd.Flags().BoolVarP(&listIdsOnly, "ids-only", "1", false, "Only display IDs")
 	networksCmd.AddCommand(&networksCreateCmd)
 	networksCreateCmd.Flags().StringVarP(&networksCreateName, "name", "n", "", "Unique name of the network")
-	networksCreateCmd.Flags().StringVarP(&networksCreateName, "bridge", "b", "", "Bridge to attach to")
+	networksCreateCmd.Flags().Uint32VarP(&networksCreateBridgeId, "bridge-id", "b", 100, "VXLAN ID to attach to")
 	networksCreateCmd.Flags().StringVar(&networksCreateIPV4Subnet, "ipv4-subnet", "10.0.0.0/24", "IPv4 subnet")
 	networksCreateCmd.Flags().StringVar(&networksCreateIPV4Gateway, "ipv4-gateway", "", "IPv4 gateway")
 	networksCreateCmd.Flags().StringVar(&networksCreateIPV6Subnet, "ipv6-subnet", "", "IPv6 subnet")

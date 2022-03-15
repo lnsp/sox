@@ -22,17 +22,22 @@ import (
 )
 
 type Libvirt struct {
-	conn        *libvirt.Connect
-	storagePool *libvirt.StoragePool
-	storagePath string
+	conn             *libvirt.Connect
+	storagePool      *libvirt.StoragePool
+	storagePath      string
+	transportNetwork string
 }
 
-func New(uri string, storagePath string) (*Libvirt, error) {
+func New(uri, storagePath, transportNetwork string) (*Libvirt, error) {
 	conn, err := libvirt.NewConnect(uri)
 	if err != nil {
 		return nil, fmt.Errorf("connect to libvirt: %w", err)
 	}
 	log.Println("connected to libvirt", uri)
+	// check transport network device
+	if _, err := netlink.LinkByName(transportNetwork); err != nil {
+		return nil, fmt.Errorf("find transport network: %w", err)
+	}
 	// get storagepool info
 	storagePool, err := conn.LookupStoragePoolByTargetPath(storagePath)
 	if err != nil {
@@ -44,9 +49,10 @@ func New(uri string, storagePath string) (*Libvirt, error) {
 	}
 	log.Println("found storage pool", storagePoolId)
 	return &Libvirt{
-		conn:        conn,
-		storagePool: storagePool,
-		storagePath: storagePath,
+		conn:             conn,
+		storagePool:      storagePool,
+		storagePath:      storagePath,
+		transportNetwork: transportNetwork,
 	}, nil
 }
 
@@ -321,15 +327,21 @@ func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, err
 	if err := netlink.AddrAdd(bridge, addrv4); err != nil {
 		return nil, fmt.Errorf("add bridge addr: %w", err)
 	}
+	// Find transport network device
+	transport, err := netlink.LinkByName(lv.transportNetwork)
+	if err != nil {
+		return nil, fmt.Errorf("find vxlan transport: %w", err)
+	}
 	// Add vxlan device
 	vxlanAttr := netlink.NewLinkAttrs()
 	vxlanAttr.Name = network.NetlinkVxlan()
 	vxlanAttr.MTU = 1450
 	vxlanAttr.MasterIndex = bridge.Attrs().Index
 	vxlanLink := &netlink.Vxlan{
-		LinkAttrs: vxlanAttr,
-		VxlanId:   network.NetlinkVxlanId(),
-		Group:     net.IPv4(239, 1, 1, 1),
+		LinkAttrs:    vxlanAttr,
+		VxlanId:      network.NetlinkVxlanId(),
+		Group:        net.IPv4(239, 1, 1, 1),
+		VtepDevIndex: transport.Attrs().Index,
 	}
 	if err := netlink.LinkAdd(vxlanLink); err != nil {
 		return nil, fmt.Errorf("create vxlan: %w", err)

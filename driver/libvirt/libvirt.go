@@ -324,6 +324,7 @@ func (lv *Libvirt) createVxlanBridge(network *models.Network) (netlink.Link, err
 	// Add vxlan device
 	vxlanAttr := netlink.NewLinkAttrs()
 	vxlanAttr.Name = network.NetlinkVxlan()
+	vxlanAttr.MTU = 1450
 	vxlanAttr.MasterIndex = bridge.Attrs().Index
 	vxlanLink := &netlink.Vxlan{
 		LinkAttrs: vxlanAttr,

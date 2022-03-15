@@ -6,3 +6,5 @@ address = "localhost:9876"
 
 [libvirt]
 uri = "qemu:///system"
+network = "fiber0"
+storage = "/var/lib/libvirt/images"

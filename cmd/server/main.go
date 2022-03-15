@@ -20,7 +20,9 @@ type config struct {
 		DSN string
 	}
 	Libvirt struct {
-		URI string
+		URI     string
+		Network string
+		Storage string
 	}
 	Grpc struct {
 		Address string
@@ -49,7 +51,12 @@ func run(cfgpath string) {
 		log.Fatalf("failed to decode config: %v", err)
 	}
 	// start vm manager
-	driver, err := driver.New(cfg.Database.DSN, cfg.Libvirt.URI)
+	driver, err := driver.New(&driver.Config{
+		DB:                  cfg.Database.DSN,
+		StoragePool:         cfg.Libvirt.Storage,
+		NetworkTransportDev: cfg.Libvirt.Network,
+		LibvirtURI:          cfg.Libvirt.URI,
+	})
 	if err != nil {
 		log.Fatalf("failed to start driver: %v", err)
 	}

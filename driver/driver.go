@@ -462,15 +462,22 @@ func initModels(db *gorm.DB) error {
 	return nil
 }
 
-func New(dbDsn string, libvirtUri string) (*Driver, error) {
-	db, err := gorm.Open(sqlite.Open(dbDsn))
+type Config struct {
+	DB                  string
+	StoragePool         string
+	LibvirtURI          string
+	NetworkTransportDev string
+}
+
+func New(cfg *Config) (*Driver, error) {
+	db, err := gorm.Open(sqlite.Open(cfg.DB))
 	if err != nil {
 		return nil, fmt.Errorf("open db: %w", err)
 	}
 	if err := initModels(db); err != nil {
 		return nil, fmt.Errorf("init models: %w", err)
 	}
-	lv, err := libvirt.New(libvirtUri, "/var/lib/libvirt/images")
+	lv, err := libvirt.New(cfg.LibvirtURI, cfg.StoragePool, cfg.NetworkTransportDev)
 	if err != nil {
 		return nil, fmt.Errorf("init libvirt: %w", err)
 	}

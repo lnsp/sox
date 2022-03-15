@@ -8,11 +8,13 @@ Experimental self-hosted virtual machine manager. Work in progress.
 - [x] Aware of SSH keys, VM images and networks
 - [x] Automatic image customization
 - [x] IPv4 address assignment, internet access as well as routable from the host machine
+- [x] Private IPv4 networks
 - [ ] IPv6 address assignment
-- [ ] Cross-node networking via VXLAN
+- [ ] Cross-node networking via VXLAN and dynamic peer resolution via l2miss, l3miss
 - [ ] Aggregation mode with VirtM running on each node in a cluster, including draining and rebalancing nodes
 - [ ] Advanced management of SSH keys and networks
 - [ ] Advanced management of VM images, including creation of new images from running VMs
+- [ ] Support for different users, projects and ACLs
 
 ## Design
 

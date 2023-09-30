@@ -1,12 +1,12 @@
 syntax = "proto3";
 
-package virtm;
+package sox.v1;
 
-option go_package = "github.com/lnsp/virtm/api;api";
+option go_package = "github.com/lnsp/sox/api;api";
 
 import "data.proto";
 
-service VirtM {
+service Sox {
     rpc CreateMachine(CreateMachineRequest) returns (CreateMachineResponse);
     rpc ListMachines(ListMachinesRequest) returns (ListMachinesResponse);
     rpc GetMachineDetails(GetMachineDetailsRequest) returns (GetMachineDetailsResponse);

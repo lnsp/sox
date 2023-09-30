@@ -1,5 +1,5 @@
 [database]
-dsn = "virtm.db"
+dsn = "machines.db"
 
 [grpc]
 address = "localhost:9876"

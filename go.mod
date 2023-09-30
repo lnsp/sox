@@ -1,4 +1,4 @@
-module github.com/lnsp/virtm
+module github.com/lnsp/sox
 
 go 1.16
 

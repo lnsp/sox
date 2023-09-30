@@ -2,9 +2,9 @@ syntax = "proto3";
 
 import "google/protobuf/timestamp.proto";
 
-package virtm;
+package sox.v1;
 
-option go_package = "github.com/lnsp/virtm/api;api";
+option go_package = "github.com/lnsp/sox/api;api";
 
 message SSHKey {
     string id = 1;

@@ -19,7 +19,7 @@
         </svg>
         <div class="ml-2"
               v-if="!collapsed">
-          VirtM
+          sox
           <div class="text-xs text-gray-400 font-mono">
             {{ version }}
           </div>

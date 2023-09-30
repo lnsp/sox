@@ -7,9 +7,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/lnsp/virtm/api"
-	"github.com/lnsp/virtm/driver"
-	"github.com/lnsp/virtm/meta"
+	"github.com/lnsp/sox/api"
+	"github.com/lnsp/sox/driver"
+	"github.com/lnsp/sox/meta"
 	"github.com/pelletier/go-toml"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"

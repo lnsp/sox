@@ -8,9 +8,9 @@ import (
 	"net"
 
 	"github.com/google/uuid"
-	"github.com/lnsp/virtm/api"
-	"github.com/lnsp/virtm/driver/libvirt"
-	"github.com/lnsp/virtm/driver/models"
+	"github.com/lnsp/sox/api"
+	"github.com/lnsp/sox/driver/libvirt"
+	"github.com/lnsp/sox/driver/models"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,7 +20,7 @@ import (
 )
 
 type Driver struct {
-	api.UnimplementedVirtMServer
+	api.UnimplementedSoxServer
 
 	db *gorm.DB
 	lv *libvirt.Libvirt
